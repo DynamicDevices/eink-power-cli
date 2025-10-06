@@ -1,0 +1,50 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock file (uncomment if building an application)
+# Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+
+# Configuration files (may contain sensitive data)
+config.toml
+*.config
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test artifacts
+/tests/output/
+/tests/temp/
+
+# Documentation build
+/docs/book/
+/docs/target/
+
+# Coverage reports
+/coverage/
+*.profraw
+
+# Backup files
+*.bak
+*.backup

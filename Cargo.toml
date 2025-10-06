@@ -1,0 +1,70 @@
+[package]
+name = "eink-power-cli"
+version = "0.1.0"
+edition = "2021"
+license = "Commercial"
+description = "Command-line interface for E-ink power controller communication"
+homepage = "https://github.com/DynamicDevices/eink-power-cli"
+repository = "https://github.com/DynamicDevices/eink-power-cli"
+documentation = "https://github.com/DynamicDevices/eink-power-cli/blob/main/README.md"
+readme = "README.md"
+keywords = ["embedded", "power-management", "serial", "cli", "eink"]
+categories = ["command-line-utilities", "embedded", "hardware-support"]
+authors = ["Alex J Lennon <ajlennon@dynamicdevices.co.uk>"]
+publish = false  # Commercial license - not for public crates.io
+
+[package.metadata]
+maintainer = "Alex J Lennon <ajlennon@dynamicdevices.co.uk>"
+contact = "info@dynamicdevices.co.uk"
+company = "Dynamic Devices Ltd"
+copyright = "Copyright (c) 2025 Dynamic Devices Ltd"
+
+[[bin]]
+name = "eink-power-cli"
+path = "src/main.rs"
+
+[dependencies]
+# CLI and argument parsing
+clap = { version = "4.4", features = ["derive", "env", "color"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Serial communication
+serialport = "4.2"
+tokio = { version = "1.35", features = ["full"] }
+tokio-serial = "5.4"
+
+# Error handling and utilities
+anyhow = "1.0"
+thiserror = "1.0"
+log = "0.4"
+env_logger = "0.10"
+
+# Configuration
+config = "0.13"
+dirs = "5.0"
+toml = "0.8"
+
+# Time and monitoring
+chrono = { version = "0.4", features = ["serde"] }
+indicatif = "0.17"
+
+# Additional utilities
+regex = "1.10"
+uuid = { version = "1.6", features = ["v4"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.11"
+tempfile = "3.8"
+assert_cmd = "2.0"
+predicates = "3.0"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+debug = true
