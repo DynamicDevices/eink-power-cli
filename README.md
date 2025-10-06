@@ -254,6 +254,167 @@ cargo test --test integration_tests
 cargo test --test mock_serial
 ```
 
+### Cross-Compilation for ARM64
+
+```bash
+# Using the provided script (recommended)
+./build-aarch64.sh
+
+# Manual cross-compilation
+rustup target add aarch64-unknown-linux-gnu
+cargo build --release --target aarch64-unknown-linux-gnu
+```
+
+### Development Helper Script
+
+The project includes a comprehensive development script (`./dev.sh`) for common tasks:
+
+```bash
+# Set up development environment with Docker
+./dev.sh setup
+
+# Build for different targets
+./dev.sh build           # Native build
+./dev.sh build-arm64     # ARM64 build
+./dev.sh build-all       # All targets
+
+# Testing and quality assurance
+./dev.sh test            # Run tests
+./dev.sh test-ci         # Run full CI pipeline
+./dev.sh lint            # Code quality checks
+
+# Docker development
+./dev.sh docker-dev      # Start development container
+./dev.sh docker-serial   # Container with serial access
+./dev.sh docker-ci       # Run CI in container
+
+# Deployment and monitoring
+./dev.sh deploy          # Deploy to target device
+./dev.sh monitor         # Monitor serial output
+./dev.sh release         # Create release artifacts
+```
+
+## CI/CD Pipeline
+
+This project includes a comprehensive CI/CD pipeline with GitHub Actions:
+
+### 🔄 Continuous Integration Features
+
+- **Multi-target builds**: x86_64, ARM64 (glibc), ARM64 (musl)
+- **Code quality enforcement**: Formatting, linting (Clippy), security audit
+- **Comprehensive testing**: Unit tests, integration tests, documentation tests
+- **Docker-based builds**: Consistent, reproducible environment using `rust:1.75-bullseye`
+- **Artifact archiving**: Pre-built binaries with checksums for all platforms
+
+### 📦 Automated Release Process
+
+- **Tagged releases**: Automatic binary builds and GitHub releases on version tags
+- **Multi-platform artifacts**: 
+  - `eink-power-cli-linux-x64` (x86_64)
+  - `eink-power-cli-linux-arm64` (ARM64 glibc)
+  - `eink-power-cli-linux-arm64-musl` (ARM64 static)
+- **Integrity verification**: SHA256 and MD5 checksums for all binaries
+- **Release notes**: Auto-generated with build information and installation instructions
+
+### 🛠️ Development Workflows
+
+#### Main CI Pipeline (`.github/workflows/ci.yml`)
+- **Triggers**: Push to `main`/`develop`, pull requests, version tags
+- **Jobs**: Test & Quality → Security Audit → Multi-target Build → Release (on tags)
+- **Docker**: Uses official Rust container with cross-compilation tools
+- **Caching**: Cargo registry and build artifacts for faster builds
+
+#### Maintenance Pipeline (`.github/workflows/maintenance.yml`)
+- **Scheduled**: Weekly dependency updates and security monitoring
+- **Dependency updates**: Automated PRs for patch version updates
+- **Security monitoring**: Automatic issue creation for vulnerabilities
+- **Code metrics**: Regular quality analysis and reporting
+
+### 🔍 Quality Assurance
+
+#### Automated Checks
+```bash
+# Code formatting (enforced)
+cargo fmt --all -- --check
+
+# Linting with strict warnings
+cargo clippy --all-targets --all-features -- -D warnings
+
+# Security vulnerability scanning
+cargo audit
+
+# Documentation generation
+cargo doc --no-deps --document-private-items
+```
+
+#### Local CI Simulation
+```bash
+# Run the full CI pipeline locally
+./dev.sh test-ci
+
+# Or using Docker
+docker-compose up ci
+```
+
+### 🐳 Docker Development Environment
+
+The project includes a complete Docker setup for consistent development:
+
+#### Development Container (`Dockerfile`)
+- **Base**: `rust:1.75-bullseye` with cross-compilation tools
+- **Tools**: Clippy, rustfmt, cargo-audit, cargo-bloat, etc.
+- **Cross-compilation**: Pre-configured for ARM64 targets
+- **Non-root user**: Security-focused development environment
+
+#### Docker Compose Services (`docker-compose.yml`)
+- **`dev`**: Main development environment
+- **`dev-serial`**: Development with serial device access
+- **`ci`**: Local CI pipeline simulation
+- **`docs`**: Documentation server on port 8000
+
+#### Usage Examples
+```bash
+# Build and start development environment
+docker-compose up dev
+
+# Development with hardware access
+docker-compose up dev-serial
+
+# Run CI pipeline locally
+docker-compose up ci
+
+# Start documentation server
+docker-compose up docs
+```
+
+### 📊 Build Artifacts
+
+Each successful build produces:
+- **Binaries**: Optimized release builds for all targets
+- **Checksums**: SHA256 and MD5 verification files
+- **Build info**: Commit hash, build date, Rust version
+- **Documentation**: Generated API docs
+- **Test reports**: Coverage and test results
+
+### 🔧 Development Best Practices
+
+#### Code Quality
+- **Formatting**: Enforced with `rustfmt`
+- **Linting**: Strict Clippy rules with zero warnings policy
+- **Testing**: Comprehensive unit and integration test coverage
+- **Documentation**: All public APIs must be documented
+
+#### Security
+- **Dependency auditing**: Weekly vulnerability scans
+- **Minimal dependencies**: Only essential crates included
+- **Static analysis**: Clippy security lints enabled
+- **Container security**: Non-root development user
+
+#### Performance
+- **Release builds**: LTO and strip enabled for minimal binary size
+- **Target optimization**: Specific builds for each platform
+- **Caching**: Aggressive caching of dependencies and build artifacts
+
 ## Hardware Requirements
 
 - **Target Platform**: Yocto Foundries.io Linux Microplatform (i.MX93)

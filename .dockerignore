@@ -1,0 +1,68 @@
+# Docker ignore file for E-ink Power CLI
+# Excludes unnecessary files from Docker build context
+
+# Build artifacts
+target/
+Cargo.lock
+
+# Git
+.git/
+.gitignore
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation build
+doc/
+*.html
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Archives and binaries
+*.bin
+*.exe
+*.tar.gz
+*.zip
+archive/
+
+# Logs
+*.log
+logs/
+reports/
+
+# Development artifacts
+release-*/
+artifacts/
+
+# OS specific
+Thumbs.db
+.DS_Store
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# CI/CD
+.github/
+
+# Local configuration
+.env
+.env.local
+config.local.*
+
+# Coverage reports
+coverage/
+*.profraw
+
+# Backup files
+*.bak
+*.backup

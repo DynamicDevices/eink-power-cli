@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # Main development environment
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eink-power-cli-dev
+    volumes:
+      - .:/workspace
+      - cargo-cache:/home/developer/.cargo/registry
+      - target-cache:/workspace/target
+    working_dir: /workspace
+    environment:
+      - RUST_BACKTRACE=1
+      - CARGO_TERM_COLOR=always
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+  # Development with serial device access (for hardware testing)
+  dev-serial:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eink-power-cli-dev-serial
+    volumes:
+      - .:/workspace
+      - cargo-cache:/home/developer/.cargo/registry
+      - target-cache:/workspace/target
+    working_dir: /workspace
+    environment:
+      - RUST_BACKTRACE=1
+      - CARGO_TERM_COLOR=always
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0  # Adjust device path as needed
+      - /dev/ttyACM0:/dev/ttyACM0  # Alternative serial device
+    privileged: true  # Required for hardware access
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+  # CI/CD simulation environment
+  ci:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eink-power-cli-ci
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      - RUST_BACKTRACE=1
+      - CARGO_TERM_COLOR=always
+      - CI=true
+    command: |
+      bash -c "
+        echo '=== Running CI Pipeline Simulation ==='
+        echo '1. Code formatting check...'
+        cargo fmt --all -- --check
+        echo '2. Linting with Clippy...'
+        cargo clippy --all-targets --all-features -- -D warnings
+        echo '3. Running tests...'
+        cargo test --verbose --all-features
+        echo '4. Building release binary...'
+        cargo build --release --target aarch64-unknown-linux-gnu
+        echo '5. Security audit...'
+        cargo audit
+        echo '=== CI Pipeline Complete ==='
+      "
+
+  # Documentation server
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eink-power-cli-docs
+    volumes:
+      - .:/workspace
+      - cargo-cache:/home/developer/.cargo/registry
+    working_dir: /workspace
+    ports:
+      - "8000:8000"
+    command: |
+      bash -c "
+        echo 'Generating documentation...'
+        cargo doc --no-deps --document-private-items --open
+        echo 'Starting documentation server on http://localhost:8000'
+        cd target/doc
+        python3 -m http.server 8000
+      "
+
+# Named volumes for caching
+volumes:
+  cargo-cache:
+    driver: local
+  target-cache:
+    driver: local
+
+# Networks (if needed for complex setups)
+networks:
+  default:
+    driver: bridge
