@@ -303,7 +303,7 @@ This project includes a comprehensive CI/CD pipeline with GitHub Actions:
 - **Multi-target builds**: x86_64, ARM64 (glibc), ARM64 (musl)
 - **Code quality enforcement**: Formatting, linting (Clippy), security audit
 - **Comprehensive testing**: Unit tests, integration tests, documentation tests
-- **Docker-based builds**: Consistent, reproducible environment using `rust:1.75-bullseye`
+- **Docker-based builds**: Consistent, reproducible environment using `rust:1.81-bullseye`
 - **Artifact archiving**: Pre-built binaries with checksums for all platforms
 
 ### 📦 Automated Release Process
@@ -361,7 +361,7 @@ docker-compose up ci
 The project includes a complete Docker setup for consistent development:
 
 #### Development Container (`Dockerfile`)
-- **Base**: `rust:1.75-bullseye` with cross-compilation tools
+- **Base**: `rust:1.81-bullseye` with cross-compilation tools
 - **Tools**: Clippy, rustfmt, cargo-audit, cargo-bloat, etc.
 - **Cross-compilation**: Pre-configured for ARM64 targets
 - **Non-root user**: Security-focused development environment

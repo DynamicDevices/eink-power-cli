@@ -25,7 +25,7 @@ impl BatteryMonitor {
     /// Read current battery status
     pub async fn read_status(&mut self) -> Result<BatteryStatus> {
         info!("Reading battery status");
-        
+
         let response = self.protocol.execute_battery_command("read").await?;
         self.parse_battery_response(&response)
     }
@@ -33,28 +33,28 @@ impl BatteryMonitor {
     /// Get battery device status
     pub async fn get_device_status(&mut self) -> Result<String> {
         info!("Getting battery device status");
-        
+
         self.protocol.execute_battery_command("status").await
     }
 
     /// Enable battery monitoring
     pub async fn enable_monitoring(&mut self) -> Result<String> {
         info!("Enabling battery monitoring");
-        
+
         self.protocol.execute_battery_command("enable").await
     }
 
     /// Disable battery monitoring
     pub async fn disable_monitoring(&mut self) -> Result<String> {
         info!("Disabling battery monitoring");
-        
+
         self.protocol.execute_battery_command("disable").await
     }
 
     /// Parse battery response into structured data
     fn parse_battery_response(&self, response: &str) -> Result<BatteryStatus> {
         debug!("Parsing battery response: {}", response);
-        
+
         // TODO: Implement actual parsing based on LTC2959 response format
         // This is a placeholder implementation based on the expected format:
         // 📊 LTC2959 Measurements:
@@ -62,7 +62,7 @@ impl BatteryMonitor {
         //    ⚡ Current: 125 mA
         //    🔋 Charge: 2450 mAh
         //    🌡️  Temperature: 23°C
-        
+
         Ok(BatteryStatus {
             voltage_mv: 3850,
             current_ma: 125,

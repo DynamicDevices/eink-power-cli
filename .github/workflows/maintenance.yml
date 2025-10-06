@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event.inputs.update_dependencies == 'true'
     container:
-      image: rust:1.75-bullseye
+      image: rust:1.81-bullseye
       options: --user root
 
     steps:
@@ -109,14 +109,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event.inputs.security_audit == 'true'
     container:
-      image: rust:1.75-bullseye
+      image: rust:1.81-bullseye
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Install cargo-audit
-      run: cargo install cargo-audit
+      run: cargo install cargo-audit --version 0.21.1
 
     - name: Run security audit
       id: audit
@@ -180,7 +180,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
     container:
-      image: rust:1.75-bullseye
+      image: rust:1.81-bullseye
 
     steps:
     - name: Checkout code

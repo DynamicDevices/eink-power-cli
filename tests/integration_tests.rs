@@ -5,11 +5,11 @@
  */
 
 //! Integration tests for the E-ink Power CLI
-//! 
+//!
 //! These tests require actual hardware to be connected.
 //! Use `cargo test --test integration_tests` to run them.
 
-use eink_power_cli::{Connection, BatteryMonitor};
+use eink_power_cli::{BatteryMonitor, Connection};
 use std::env;
 
 /// Test serial connection to the power controller
@@ -17,12 +17,12 @@ use std::env;
 #[ignore] // Requires hardware
 async fn test_connection() {
     let device = env::var("TEST_DEVICE").unwrap_or_else(|_| "/dev/ttyUSB0".to_string());
-    
+
     let mut connection = Connection::new(&device, 115200).expect("Failed to create connection");
-    
+
     // This should succeed if hardware is connected
     let result = connection.connect().await;
-    
+
     match result {
         Ok(()) => {
             println!("✅ Connection test passed");
@@ -40,10 +40,10 @@ async fn test_connection() {
 #[ignore] // Requires hardware
 async fn test_battery_monitoring() {
     let device = env::var("TEST_DEVICE").unwrap_or_else(|_| "/dev/ttyUSB0".to_string());
-    
+
     let connection = Connection::new(&device, 115200).expect("Failed to create connection");
     let mut battery = BatteryMonitor::new(connection);
-    
+
     // This test will be implemented once the protocol is complete
     println!("🔋 Battery monitoring test - placeholder");
 }

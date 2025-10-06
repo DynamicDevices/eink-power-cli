@@ -36,7 +36,10 @@ impl Connection {
 
     /// Connect to the serial device
     pub async fn connect(&mut self) -> Result<()> {
-        info!("Connecting to {} at {} baud", self.device_path, self.baud_rate);
+        info!(
+            "Connecting to {} at {} baud",
+            self.device_path, self.baud_rate
+        );
 
         // Check if device exists
         if !std::path::Path::new(&self.device_path).exists() {
@@ -65,7 +68,7 @@ impl Connection {
     /// Test the connection by sending a ping command
     async fn test_connection(&mut self) -> Result<()> {
         debug!("Testing connection with ping command");
-        
+
         // TODO: Implement actual ping command
         // For now, just verify the stream is available
         if self.stream.is_none() {

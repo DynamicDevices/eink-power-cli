@@ -25,60 +25,69 @@ impl PowerController {
     /// Control PMIC power
     pub async fn control_pmic(&mut self, state: PowerState) -> Result<String> {
         info!("Controlling PMIC power: {:?}", state);
-        
+
         let state_str = match state {
             PowerState::On => "on",
             PowerState::Off => "off",
             PowerState::Status => "status",
         };
-        
+
         self.protocol.execute_power_command("pmic", state_str).await
     }
 
     /// Control WiFi power
     pub async fn control_wifi(&mut self, state: PowerState) -> Result<String> {
         info!("Controlling WiFi power: {:?}", state);
-        
+
         let state_str = match state {
             PowerState::On => "on",
             PowerState::Off => "off",
             PowerState::Status => "status",
         };
-        
+
         self.protocol.execute_power_command("wifi", state_str).await
     }
 
     /// Control display power
     pub async fn control_display(&mut self, state: PowerState) -> Result<String> {
         info!("Controlling display power: {:?}", state);
-        
+
         let state_str = match state {
             PowerState::On => "on",
             PowerState::Off => "off",
             PowerState::Status => "status",
         };
-        
+
         self.protocol.execute_power_command("disp", state_str).await
     }
 
     /// Get power statistics
     pub async fn get_power_stats(&mut self) -> Result<PowerStats> {
         info!("Getting power statistics");
-        
+
         let response = self.protocol.execute_system_command("power stats").await?;
         self.parse_power_stats(&response)
     }
 
     /// Control GPIO pin
-    pub async fn control_gpio(&mut self, port: &str, pin: u8, action: GpioAction) -> Result<String> {
+    pub async fn control_gpio(
+        &mut self,
+        port: &str,
+        pin: u8,
+        action: GpioAction,
+    ) -> Result<String> {
         info!("Controlling GPIO {}{}: {:?}", port, pin, action);
-        
+
         match action {
             GpioAction::Get => {
-                self.protocol.execute_gpio_command("get", port, pin, None).await
+                self.protocol
+                    .execute_gpio_command("get", port, pin, None)
+                    .await
             }
             GpioAction::Set(value) => {
-                self.protocol.execute_gpio_command("set", port, pin, Some(value)).await
+                self.protocol
+                    .execute_gpio_command("set", port, pin, Some(value))
+                    .await
             }
         }
     }
@@ -86,7 +95,7 @@ impl PowerController {
     /// Parse power statistics response
     fn parse_power_stats(&self, response: &str) -> Result<PowerStats> {
         debug!("Parsing power stats: {}", response);
-        
+
         // TODO: Implement actual parsing based on controller response format
         // This is a placeholder implementation
         Ok(PowerStats {

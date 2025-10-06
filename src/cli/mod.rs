@@ -17,7 +17,12 @@ use std::path::PathBuf;
 )]
 pub struct Cli {
     /// Serial device path
-    #[arg(short, long, default_value = "/dev/ttyUSB0", help = "Serial device path")]
+    #[arg(
+        short,
+        long,
+        default_value = "/dev/ttyUSB0",
+        help = "Serial device path"
+    )]
     pub device: String,
 
     /// Baud rate for serial communication
@@ -66,44 +71,44 @@ pub enum Commands {
     /// System commands
     #[command(subcommand)]
     System(SystemCommands),
-    
+
     /// Power management commands
     #[command(subcommand)]
     Power(PowerCommands),
-    
+
     /// Battery monitoring commands
     #[command(subcommand)]
     Battery(BatteryCommands),
-    
+
     /// GPIO control commands
     #[command(subcommand)]
     Gpio(GpioCommands),
-    
+
     /// NFC interface commands
     #[command(subcommand)]
     Nfc(NfcCommands),
-    
+
     /// Power management commands
     #[command(subcommand)]
     Pm(PowerManagementCommands),
-    
+
     /// Connectivity test
     Ping,
-    
+
     /// Get controller version
     Version,
-    
+
     /// Monitor continuously
     Monitor {
         /// Monitoring interval in seconds
         #[arg(short, long, default_value = "30")]
         interval: u64,
-        
+
         /// Run continuously
         #[arg(short, long)]
         continuous: bool,
     },
-    
+
     /// Execute batch commands from file
     Batch {
         /// File containing commands to execute

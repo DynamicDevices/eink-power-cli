@@ -2,10 +2,10 @@
  * E-ink Power CLI - Command Line Interface for Power Management Controller
  * Copyright (c) 2025 Dynamic Devices Ltd
  * All rights reserved.
- * 
+ *
  * This software is proprietary to Dynamic Devices Ltd and may not be
  * reproduced, distributed, or disclosed without written permission.
- * 
+ *
  * Maintainer: Alex J Lennon <ajlennon@dynamicdevices.co.uk>
  * Company: Dynamic Devices Ltd
  * Contact: info@dynamicdevices.co.uk
@@ -18,8 +18,8 @@ use std::process;
 
 mod cli;
 mod error;
-mod serial;
 mod power;
+mod serial;
 
 use cli::Cli;
 use error::PowerCliError;
@@ -50,10 +50,10 @@ async fn main() {
     // Execute the command
     if let Err(e) = run(cli).await {
         error!("Command failed: {}", e);
-        
+
         // Print user-friendly error message
         eprintln!("Error: {}", e);
-        
+
         // Exit with error code
         process::exit(1);
     }
@@ -62,7 +62,7 @@ async fn main() {
 /// Main application logic
 async fn run(cli: Cli) -> Result<(), PowerCliError> {
     info!("Starting eink-power-cli v{}", VERSION);
-    
+
     // TODO: Implement command execution
     // This will be implemented in Phase 1
     match cli.command {

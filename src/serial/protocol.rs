@@ -23,7 +23,7 @@ impl Protocol {
     /// Execute a system command
     pub async fn execute_system_command(&mut self, command: &str) -> Result<String> {
         debug!("Executing system command: {}", command);
-        
+
         let response = self.connection.send_command(command).await?;
         self.parse_response(&response)
     }
@@ -32,7 +32,7 @@ impl Protocol {
     pub async fn execute_power_command(&mut self, rail: &str, state: &str) -> Result<String> {
         let command = format!("power {} {}", rail, state);
         debug!("Executing power command: {}", command);
-        
+
         let response = self.connection.send_command(&command).await?;
         self.parse_response(&response)
     }
@@ -44,15 +44,21 @@ impl Protocol {
         } else {
             format!("ltc2959 {}", command)
         };
-        
+
         debug!("Executing battery command: {}", full_command);
-        
+
         let response = self.connection.send_command(&full_command).await?;
         self.parse_response(&response)
     }
 
     /// Execute a GPIO command
-    pub async fn execute_gpio_command(&mut self, action: &str, port: &str, pin: u8, value: Option<u8>) -> Result<String> {
+    pub async fn execute_gpio_command(
+        &mut self,
+        action: &str,
+        port: &str,
+        pin: u8,
+        value: Option<u8>,
+    ) -> Result<String> {
         let command = match action {
             "get" => format!("gpio get {} {}", port, pin),
             "set" => {
@@ -61,13 +67,15 @@ impl Protocol {
                 })?;
                 format!("gpio set {} {} {}", port, pin, val)
             }
-            _ => return Err(PowerCliError::InvalidCommand {
-                command: format!("Unknown GPIO action: {}", action),
-            }),
+            _ => {
+                return Err(PowerCliError::InvalidCommand {
+                    command: format!("Unknown GPIO action: {}", action),
+                })
+            }
         };
-        
+
         debug!("Executing GPIO command: {}", command);
-        
+
         let response = self.connection.send_command(&command).await?;
         self.parse_response(&response)
     }
@@ -76,7 +84,7 @@ impl Protocol {
     pub async fn execute_nfc_command(&mut self, command: &str) -> Result<String> {
         let full_command = format!("nfc {}", command);
         debug!("Executing NFC command: {}", full_command);
-        
+
         let response = self.connection.send_command(&full_command).await?;
         self.parse_response(&response)
     }
@@ -84,7 +92,7 @@ impl Protocol {
     /// Parse the response from the controller
     fn parse_response(&self, response: &str) -> Result<String> {
         debug!("Parsing response: {}", response);
-        
+
         // Check for error responses
         if response.contains("Error:") || response.contains("Failed:") {
             return Err(PowerCliError::ControllerError {
@@ -100,7 +108,7 @@ impl Protocol {
     /// Parse battery data from response
     pub fn parse_battery_data(&self, response: &str) -> Result<BatteryData> {
         debug!("Parsing battery data from: {}", response);
-        
+
         // TODO: Implement actual parsing based on controller response format
         // This is a placeholder implementation
         Ok(BatteryData {
@@ -120,7 +128,7 @@ impl Protocol {
             "status": "success",
             "data": data
         });
-        
+
         Ok(json)
     }
 }
