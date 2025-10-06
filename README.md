@@ -2,9 +2,13 @@
 
 Command-line interface for communicating with the MCXC143VFM E-ink power management controller over serial UART.
 
+[![CI/CD Pipeline](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/ci.yml)
+[![Maintenance](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/maintenance.yml/badge.svg)](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/maintenance.yml)
+[![Release](https://img.shields.io/github/v/release/DynamicDevices/eink-power-cli?include_prereleases)](https://github.com/DynamicDevices/eink-power-cli/releases)
 [![License: Commercial](https://img.shields.io/badge/License-Commercial-red.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.70+-blue.svg)](https://www.rust-lang.org)
 [![Platform](https://img.shields.io/badge/platform-Linux-green.svg)](https://www.kernel.org)
+[![Targets](https://img.shields.io/badge/targets-x86__64%20%7C%20ARM64-brightgreen.svg)](#cross-compilation-for-arm64)
 
 ## Overview
 
