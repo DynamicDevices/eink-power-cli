@@ -114,14 +114,11 @@ jobs:
         target:
           - x86_64-unknown-linux-gnu
           - aarch64-unknown-linux-gnu
-          - aarch64-unknown-linux-musl
         include:
           - target: x86_64-unknown-linux-gnu
             artifact_name: eink-power-cli-linux-x64
           - target: aarch64-unknown-linux-gnu
             artifact_name: eink-power-cli-linux-arm64
-          - target: aarch64-unknown-linux-musl
-            artifact_name: eink-power-cli-linux-arm64-musl
 
     steps:
     - name: Checkout code
@@ -168,8 +165,7 @@ jobs:
       run: |
         cargo build --release --target ${{ matrix.target }} --verbose
 
-    - name: Strip binary (if not musl)
-      if: "!contains(matrix.target, 'musl')"
+    - name: Strip binary
       run: |
         if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
           aarch64-linux-gnu-strip target/${{ matrix.target }}/release/eink-power-cli
@@ -256,12 +252,11 @@ jobs:
         ## Build Information
         - **Commit**: ${{ github.sha }}
         - **Build Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-        - **Rust Version**: 1.75
+        - **Rust Version**: 1.81
         
         ## Supported Platforms
         - **Linux x86_64**: \`eink-power-cli-linux-x64\`
-        - **Linux ARM64 (glibc)**: \`eink-power-cli-linux-arm64\`
-        - **Linux ARM64 (musl)**: \`eink-power-cli-linux-arm64-musl\`
+        - **Linux ARM64**: \`eink-power-cli-linux-arm64\`
         
         ## Installation
         1. Download the appropriate binary for your platform

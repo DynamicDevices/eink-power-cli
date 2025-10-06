@@ -300,7 +300,7 @@ This project includes a comprehensive CI/CD pipeline with GitHub Actions:
 
 ### 🔄 Continuous Integration Features
 
-- **Multi-target builds**: x86_64, ARM64 (glibc), ARM64 (musl)
+- **Multi-target builds**: x86_64, ARM64
 - **Code quality enforcement**: Formatting, linting (Clippy), security audit
 - **Comprehensive testing**: Unit tests, integration tests, documentation tests
 - **Docker-based builds**: Consistent, reproducible environment using `rust:1.81-bullseye`
@@ -311,8 +311,7 @@ This project includes a comprehensive CI/CD pipeline with GitHub Actions:
 - **Tagged releases**: Automatic binary builds and GitHub releases on version tags
 - **Multi-platform artifacts**: 
   - `eink-power-cli-linux-x64` (x86_64)
-  - `eink-power-cli-linux-arm64` (ARM64 glibc)
-  - `eink-power-cli-linux-arm64-musl` (ARM64 static)
+  - `eink-power-cli-linux-arm64` (ARM64)
 - **Integrity verification**: SHA256 and MD5 checksums for all binaries
 - **Release notes**: Auto-generated with build information and installation instructions
 

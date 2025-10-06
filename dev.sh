@@ -178,7 +178,7 @@ build_arm64() {
 build_all() {
     log_info "Building for all targets..."
     
-    targets=("x86_64-unknown-linux-gnu" "aarch64-unknown-linux-gnu" "aarch64-unknown-linux-musl")
+    targets=("x86_64-unknown-linux-gnu" "aarch64-unknown-linux-gnu")
     
     for target in "${targets[@]}"; do
         log_info "Building for $target..."
@@ -312,7 +312,7 @@ create_release() {
     mkdir -p "$RELEASE_DIR"
     
     # Copy binaries
-    targets=("x86_64-unknown-linux-gnu" "aarch64-unknown-linux-gnu" "aarch64-unknown-linux-musl")
+    targets=("x86_64-unknown-linux-gnu" "aarch64-unknown-linux-gnu")
     
     for target in "${targets[@]}"; do
         if [[ -f "target/$target/release/$PROJECT_NAME" ]]; then
@@ -338,7 +338,6 @@ Rust Version: $(rustc --version)
 Binaries:
 - $PROJECT_NAME-x86_64-unknown-linux-gnu (Linux x86_64)
 - $PROJECT_NAME-aarch64-unknown-linux-gnu (Linux ARM64)
-- $PROJECT_NAME-aarch64-unknown-linux-musl (Linux ARM64 - static)
 
 Checksums:
 - SHA256: *.sha256 files

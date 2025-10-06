@@ -46,8 +46,7 @@ RUN rustup component add \
 # Install cross-compilation targets
 RUN rustup target add \
     x86_64-unknown-linux-gnu \
-    aarch64-unknown-linux-gnu \
-    aarch64-unknown-linux-musl
+    aarch64-unknown-linux-gnu
 
 # Install useful Cargo tools
 RUN cargo install \
