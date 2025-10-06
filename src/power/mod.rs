@@ -9,5 +9,7 @@
 pub mod battery;
 pub mod control;
 
+#[allow(unused_imports)]
 pub use battery::BatteryMonitor;
+#[allow(unused_imports)]
 pub use control::PowerController;

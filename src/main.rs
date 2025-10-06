@@ -12,7 +12,6 @@
  */
 
 use clap::Parser;
-use env_logger;
 use log::{error, info};
 use std::process;
 
