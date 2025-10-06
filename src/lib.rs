@@ -25,7 +25,7 @@
 //!     let mut conn = Connection::new("/dev/ttyUSB0", 115200)?;
 //!     conn.connect().await?;
 //!     
-//!     let battery = BatteryMonitor::new(&mut conn);
+//!     let mut battery = BatteryMonitor::new(conn);
 //!     let status = battery.read_status().await?;
 //!     
 //!     println!("Battery voltage: {}mV", status.voltage_mv);
