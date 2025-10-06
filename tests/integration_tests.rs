@@ -42,7 +42,7 @@ async fn test_battery_monitoring() {
     let device = env::var("TEST_DEVICE").unwrap_or_else(|_| "/dev/ttyUSB0".to_string());
 
     let connection = Connection::new(&device, 115200).expect("Failed to create connection");
-    let mut battery = BatteryMonitor::new(connection);
+    let _battery = BatteryMonitor::new(connection);
 
     // This test will be implemented once the protocol is complete
     println!("🔋 Battery monitoring test - placeholder");
