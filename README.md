@@ -2,7 +2,7 @@
 
 Command-line interface for communicating with the MCXC143VFM/MCXC144VFM E-ink power management controller over serial UART.
 
-**✨ Version 2.2.0 - Matches PMU firmware v2.2.0 for seamless compatibility!**
+**✨ Version 2.3.0 - Enhanced with comprehensive firmware management capabilities!**
 
 [![CI/CD Pipeline](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/ci.yml)
 [![Maintenance](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/maintenance.yml/badge.svg)](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/maintenance.yml)
@@ -14,19 +14,21 @@ Command-line interface for communicating with the MCXC143VFM/MCXC144VFM E-ink po
 
 ## Overview
 
-The E-ink Power CLI is a Rust-based command-line tool designed to communicate with the MCXC143VFM/MCXC144VFM power management controller. It provides a simple, extensible interface for:
+The E-ink Power CLI is a Rust-based command-line tool designed to communicate with the MCXC143VFM/MCXC144VFM power management controller. It provides:
 
 - **Power Management**: Control PMIC, WiFi, and display power rails
 - **Battery Monitoring**: Real-time LTC2959 coulomb counter readings
 - **System Control**: GPIO manipulation, system information, and diagnostics
-- **Board Control**: 🆕 E-Ink controller reset and power cycling (v2.2.0)
-- **NFC Interface**: NTA5332 controller status and field detection
-- **Automation**: Script-friendly output formats and batch operations
+- **🆕 Firmware Management**: Upload firmware via mcumgr with progress indication (v2.3.0)
+- **Board Control**: E-Ink controller reset and power cycling
+- **Automation**: JSON/CSV output formats and batch operations
 
-## What's New in v2.2.0
+## What's New in v2.3.0
 
-- **🔄 Board Reset Command**: Power cycle the E-Ink controller board with `board reset`
-- **📊 Enhanced Version Display**: Support for semantic versioning with build metadata (e.g., `2.2.0+292.0a0d038-dirty`)
+- **🚀 Firmware Management**: Complete firmware upload with mcumgr integration
+- **📊 Progress Indication**: Real-time upload progress and boot countdown
+- **🔄 Automated Process**: Reset → Upload → Reboot → Verify in one command
+- **📋 Firmware Info**: List installed images and bootloader status
 - **🔧 Improved GPIO Commands**: Enhanced `gpio get` and `gpio set` functionality
 - **⚡ Better Power Control**: Refined power management commands for all rails
 - **🚀 Full Command Framework**: Complete implementation of all planned CLI commands

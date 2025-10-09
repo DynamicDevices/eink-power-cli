@@ -95,6 +95,10 @@ pub enum Commands {
     #[command(subcommand)]
     Pm(PowerManagementCommands),
 
+    /// Firmware management commands
+    #[command(subcommand)]
+    Firmware(FirmwareCommands),
+
     /// Connectivity test
     Ping,
 
@@ -261,6 +265,32 @@ pub enum Ltc2959Commands {
     },
     /// Reset for fresh battery installation
     ProductionReset,
+}
+
+/// Firmware management commands
+#[derive(Subcommand, Debug, Clone)]
+pub enum FirmwareCommands {
+    /// List installed firmware images
+    List,
+    /// Upload new firmware image
+    Upload {
+        /// Firmware file path
+        #[arg(short, long)]
+        file: std::path::PathBuf,
+        /// Skip system reset (assume already in bootloader mode)
+        #[arg(long)]
+        skip_reset: bool,
+        /// Custom serial port (default: /dev/ttyLP2)
+        #[arg(long)]
+        port: Option<String>,
+        /// Custom baud rate (default: 115200)
+        #[arg(long)]
+        baud: Option<u32>,
+    },
+    /// Reset PMU into bootloader mode
+    Reset,
+    /// Get firmware slot information
+    Info,
 }
 
 /// Power states

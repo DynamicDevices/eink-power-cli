@@ -17,6 +17,7 @@ use std::process;
 
 mod cli;
 mod error;
+mod firmware;
 mod json;
 mod power;
 mod serial;
@@ -431,6 +432,37 @@ async fn execute_command(
                         println!("📡 NFC Field Detection:");
                         println!("{}", response);
                     }
+                }
+            }
+        }
+        Commands::Firmware(firmware_cmd) => {
+            use cli::FirmwareCommands;
+            
+            // Extract port and baud from the command
+            let (port, baud) = match firmware_cmd {
+                FirmwareCommands::Upload { ref port, baud, .. } => (port.clone(), baud.unwrap_or(115200)),
+                _ => (None, 115200),
+            };
+            
+            let connection = serial::Connection::new(&cli.device, cli.baud, cli.quiet)?;
+            let mut firmware_manager = firmware::FirmwareManager::new(connection, port, baud);
+            
+            match firmware_cmd {
+                FirmwareCommands::List => {
+                    let response = firmware_manager.list_images().await?;
+                    output_response(cli, "firmware list", &response, "📋", "Firmware Images")?;
+                }
+                FirmwareCommands::Info => {
+                    let response = firmware_manager.get_info().await?;
+                    output_response(cli, "firmware info", &response, "ℹ️", "Firmware Information")?;
+                }
+                FirmwareCommands::Reset => {
+                    let response = firmware_manager.reset_to_bootloader().await?;
+                    output_response(cli, "firmware reset", &response, "🔄", "Bootloader Reset")?;
+                }
+                FirmwareCommands::Upload { file, skip_reset, .. } => {
+                    let response = firmware_manager.upload_firmware(file.as_path(), skip_reset).await?;
+                    output_response(cli, "firmware upload", &response, "⬆️", "Firmware Upload")?;
                 }
             }
         }

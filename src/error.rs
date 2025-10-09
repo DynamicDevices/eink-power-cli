@@ -69,6 +69,10 @@ pub enum PowerCliError {
     /// GPIO control error
     #[error("GPIO control error: {message}")]
     GpioError { message: String },
+
+    /// Firmware management errors
+    #[error("Firmware error: {message}")]
+    FirmwareError { message: String },
 }
 
 /// Result type alias for convenience
