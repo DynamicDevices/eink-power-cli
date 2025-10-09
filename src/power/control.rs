@@ -109,9 +109,7 @@ impl PowerController {
         info!("Executing board action: {:?}", action);
 
         match action {
-            BoardAction::Reset => {
-                self.protocol.execute_board_command("reset").await
-            }
+            BoardAction::Reset => self.protocol.execute_board_command("reset").await,
         }
     }
 

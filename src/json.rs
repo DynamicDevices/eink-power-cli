@@ -4,9 +4,9 @@
  * All rights reserved.
  */
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use chrono::{DateTime, Utc};
 
 /// Standard JSON response wrapper
 #[derive(Debug, Serialize, Deserialize)]
@@ -19,7 +19,7 @@ pub struct JsonResponse {
 }
 
 impl JsonResponse {
-    #[allow(dead_code)]  // May be used in future
+    #[allow(dead_code)] // May be used in future
     pub fn success(command: &str, data: Value) -> Self {
         Self {
             timestamp: Utc::now(),
@@ -40,7 +40,7 @@ impl JsonResponse {
         }
     }
 
-    #[allow(dead_code)]  // May be used in future
+    #[allow(dead_code)] // May be used in future
     pub fn error(command: &str, error: &str) -> Self {
         Self {
             timestamp: Utc::now(),
@@ -133,28 +133,40 @@ impl ResponseParser {
         };
 
         // Parse voltage (e.g., "Voltage: 6088 mV")
-        if let Some(caps) = regex::Regex::new(r"Voltage:\s*(\d+)\s*mV").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Voltage:\s*(\d+)\s*mV")
+            .unwrap()
+            .captures(response)
+        {
             if let Ok(voltage) = caps[1].parse::<u16>() {
                 battery.voltage_mv = Some(voltage);
             }
         }
 
         // Parse current (e.g., "Current: -170 mA")
-        if let Some(caps) = regex::Regex::new(r"Current:\s*(-?\d+)\s*mA").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Current:\s*(-?\d+)\s*mA")
+            .unwrap()
+            .captures(response)
+        {
             if let Ok(current) = caps[1].parse::<i16>() {
                 battery.current_ma = Some(current);
             }
         }
 
         // Parse charge (e.g., "Charge: 0 mAh")
-        if let Some(caps) = regex::Regex::new(r"Charge:\s*(\d+)\s*mAh").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Charge:\s*(\d+)\s*mAh")
+            .unwrap()
+            .captures(response)
+        {
             if let Ok(charge) = caps[1].parse::<u16>() {
                 battery.charge_mah = Some(charge);
             }
         }
 
         // Parse power (e.g., "Power: -1040 mW")
-        if let Some(caps) = regex::Regex::new(r"Power:\s*(-?\d+)\s*mW").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Power:\s*(-?\d+)\s*mW")
+            .unwrap()
+            .captures(response)
+        {
             if let Ok(power) = caps[1].parse::<i32>() {
                 battery.power_mw = Some(power);
             }
@@ -175,32 +187,50 @@ impl ResponseParser {
         };
 
         // Parse board (e.g., "Board: MCXC143VFM E-Ink Power Controller")
-        if let Some(caps) = regex::Regex::new(r"Board:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Board:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             info.board = Some(caps[1].trim().to_string());
         }
 
         // Parse SoC (e.g., "SoC: NXP MCXC143VFM (ARM Cortex-M0+)")
-        if let Some(caps) = regex::Regex::new(r"SoC:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"SoC:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             info.soc = Some(caps[1].trim().to_string());
         }
 
         // Parse version (e.g., "Version: 2.2.0-+0fa46fb-dirty.298")
-        if let Some(caps) = regex::Regex::new(r"Version:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Version:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             info.version = Some(caps[1].trim().to_string());
         }
 
         // Parse build date (e.g., "Build: 2025-10-09 11:13:59 UTC")
-        if let Some(caps) = regex::Regex::new(r"Build:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Build:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             info.build_date = Some(caps[1].trim().to_string());
         }
 
         // Parse build type (e.g., "Build Type: Production")
-        if let Some(caps) = regex::Regex::new(r"Build Type:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Build Type:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             info.build_type = Some(caps[1].trim().to_string());
         }
 
         // Parse uptime (e.g., "System Uptime: 0:01:07 (67427 ms)")
-        if let Some(caps) = regex::Regex::new(r"System Uptime:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"System Uptime:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             info.uptime = Some(caps[1].trim().to_string());
         }
 
@@ -219,12 +249,18 @@ impl ResponseParser {
         };
 
         // Parse status register (e.g., "NTA5332 Status: 0x02")
-        if let Some(caps) = regex::Regex::new(r"NTA5332 Status:\s*(0x[0-9A-Fa-f]+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"NTA5332 Status:\s*(0x[0-9A-Fa-f]+)")
+            .unwrap()
+            .captures(response)
+        {
             nfc.status_register = Some(caps[1].to_string());
         }
 
         // Parse RF field (e.g., "RF Field: Absent")
-        if let Some(caps) = regex::Regex::new(r"RF Field:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"RF Field:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             nfc.rf_field = Some(caps[1].trim().to_string());
         }
 
@@ -243,7 +279,10 @@ impl ResponseParser {
         }
 
         // Parse EEPROM status (e.g., "EEPROM: Ready")
-        if let Some(caps) = regex::Regex::new(r"EEPROM:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"EEPROM:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             nfc.eeprom_status = Some(caps[1].trim().to_string());
         }
 
@@ -264,17 +303,26 @@ impl ResponseParser {
         };
 
         // Parse status register (e.g., "LTC2959 Status Register: 0x01")
-        if let Some(caps) = regex::Regex::new(r"LTC2959 Status Register:\s*(0x[0-9A-Fa-f]+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"LTC2959 Status Register:\s*(0x[0-9A-Fa-f]+)")
+            .unwrap()
+            .captures(response)
+        {
             ltc.status_register = Some(caps[1].to_string());
         }
 
         // Parse ADC mode (e.g., "ADC Mode: Smart Sleep")
-        if let Some(caps) = regex::Regex::new(r"ADC Mode:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"ADC Mode:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             ltc.adc_mode = Some(caps[1].trim().to_string());
         }
 
         // Parse coulomb counter (e.g., "Coulomb Counter: Disabled")
-        if let Some(caps) = regex::Regex::new(r"Coulomb Counter:\s*(.+)").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"Coulomb Counter:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
             ltc.coulomb_counter = Some(caps[1].trim().to_string());
         }
 
@@ -299,7 +347,10 @@ impl ResponseParser {
         };
 
         // Parse GPIO value (e.g., "GPIO A0: 1" or "Pin value: 0")
-        if let Some(caps) = regex::Regex::new(r"(?:GPIO [A-Z]\d+:\s*|Pin value:\s*)([01])").unwrap().captures(response) {
+        if let Some(caps) = regex::Regex::new(r"(?:GPIO [A-Z]\d+:\s*|Pin value:\s*)([01])")
+            .unwrap()
+            .captures(response)
+        {
             if let Ok(value) = caps[1].parse::<u8>() {
                 gpio.value = Some(value);
             }

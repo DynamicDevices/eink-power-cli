@@ -17,7 +17,12 @@ use std::path::PathBuf;
 )]
 pub struct Cli {
     /// Serial device path
-    #[arg(short, long, default_value = "/dev/ttyLP2", help = "Serial device path")]
+    #[arg(
+        short,
+        long,
+        default_value = "/dev/ttyLP2",
+        help = "Serial device path"
+    )]
     pub device: String,
 
     /// Baud rate for serial communication

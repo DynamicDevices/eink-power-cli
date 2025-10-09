@@ -33,12 +33,15 @@ impl FirmwareManager {
     /// List installed firmware images using mcumgr
     pub async fn list_images(&mut self) -> Result<String, PowerCliError> {
         info!("Listing firmware images using mcumgr");
-        
+
         let output = Command::new("mcumgr")
             .args(&[
-                "--conntype", "serial",
-                "--connstring", &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
-                "image", "list"
+                "--conntype",
+                "serial",
+                "--connstring",
+                &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
+                "image",
+                "list",
             ])
             .output()
             .map_err(|e| PowerCliError::Io(e))?;
@@ -57,16 +60,20 @@ impl FirmwareManager {
     /// Get firmware slot information
     pub async fn get_info(&mut self) -> Result<String, PowerCliError> {
         info!("Getting firmware slot information");
-        
+
         // Try to get image list first
         let images = self.list_images().await?;
-        
-        // Also try to get bootloader info if available
-        let bootloader_info = self.get_bootloader_info().await.unwrap_or_else(|_| {
-            "Bootloader info not available".to_string()
-        });
 
-        Ok(format!("=== Firmware Information ===\n\n--- Images ---\n{}\n--- Bootloader ---\n{}", images, bootloader_info))
+        // Also try to get bootloader info if available
+        let bootloader_info = self
+            .get_bootloader_info()
+            .await
+            .unwrap_or_else(|_| "Bootloader info not available".to_string());
+
+        Ok(format!(
+            "=== Firmware Information ===\n\n--- Images ---\n{}\n--- Bootloader ---\n{}",
+            images, bootloader_info
+        ))
     }
 
     /// Reset PMU into bootloader mode
@@ -81,7 +88,10 @@ impl FirmwareManager {
                 debug!("Reset response: {}", response);
             }
             Err(e) => {
-                warn!("System reset command failed (PMU may already be in bootloader mode): {}", e);
+                warn!(
+                    "System reset command failed (PMU may already be in bootloader mode): {}",
+                    e
+                );
             }
         }
 
@@ -103,7 +113,11 @@ impl FirmwareManager {
     }
 
     /// Upload firmware image
-    pub async fn upload_firmware(&mut self, firmware_path: &Path, skip_reset: bool) -> Result<String, PowerCliError> {
+    pub async fn upload_firmware(
+        &mut self,
+        firmware_path: &Path,
+        skip_reset: bool,
+    ) -> Result<String, PowerCliError> {
         println!("🚀 Starting firmware upload process...");
         println!("📁 Firmware file: {}", firmware_path.display());
 
@@ -141,7 +155,7 @@ impl FirmwareManager {
 
         // Step 4: Wait for firmware to boot with progress indication
         println!("\n⏳ Step 4/4: Waiting for firmware to boot (15 seconds)...");
-        
+
         // Show countdown progress
         for i in (1..=15).rev() {
             print!("\r⏱️  Waiting for boot... {} seconds remaining", i);
@@ -149,7 +163,7 @@ impl FirmwareManager {
             sleep(Duration::from_millis(1000)).await;
         }
         print!("\r✅ Boot wait completed!                        \n");
-        
+
         println!("🔍 Verifying new firmware...");
         match self.verify_new_firmware().await {
             Ok(version_info) => {
@@ -158,7 +172,10 @@ impl FirmwareManager {
             }
             Err(e) => {
                 warn!("Could not verify new firmware: {}", e);
-                results.push("⚠️  Verification: Could not verify new firmware (may still be booting)".to_string());
+                results.push(
+                    "⚠️  Verification: Could not verify new firmware (may still be booting)"
+                        .to_string(),
+                );
                 println!("   ⚠️  Could not verify new firmware (may still be booting)");
             }
         }
@@ -170,23 +187,26 @@ impl FirmwareManager {
     /// Send system reset command to PMU
     async fn send_system_reset(&mut self) -> Result<String, PowerCliError> {
         debug!("Sending system reset command to PMU");
-        
+
         // Connect to PMU and send reset command
         self.connection.connect().await?;
         let response = self.connection.send_command("system reset").await?;
-        
+
         Ok(response)
     }
 
     /// Verify PMU is in bootloader mode
     async fn verify_bootloader_mode(&mut self) -> Result<String, PowerCliError> {
         debug!("Verifying bootloader mode with mcumgr");
-        
+
         let output = Command::new("mcumgr")
             .args(&[
-                "--conntype", "serial",
-                "--connstring", &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
-                "echo", "bootloader_test"
+                "--conntype",
+                "serial",
+                "--connstring",
+                &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
+                "echo",
+                "bootloader_test",
             ])
             .output()
             .map_err(|e| PowerCliError::Io(e))?;
@@ -203,22 +223,27 @@ impl FirmwareManager {
     /// Upload firmware using mcumgr
     async fn mcumgr_upload(&mut self, firmware_path: &Path) -> Result<String, PowerCliError> {
         info!("Uploading firmware: {}", firmware_path.display());
-        
+
         // Get file size for progress indication
         let file_size = std::fs::metadata(firmware_path)
             .map_err(|e| PowerCliError::Io(e))?
             .len();
-        
-        println!("📦 Starting upload of {} ({} bytes)...", 
-                firmware_path.file_name().unwrap().to_string_lossy(), 
-                file_size);
-        
+
+        println!(
+            "📦 Starting upload of {} ({} bytes)...",
+            firmware_path.file_name().unwrap().to_string_lossy(),
+            file_size
+        );
+
         let mut child = Command::new("mcumgr")
             .args(&[
-                "--conntype", "serial",
-                "--connstring", &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
-                "image", "upload",
-                firmware_path.to_str().unwrap()
+                "--conntype",
+                "serial",
+                "--connstring",
+                &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
+                "image",
+                "upload",
+                firmware_path.to_str().unwrap(),
             ])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -228,16 +253,15 @@ impl FirmwareManager {
         // Show progress while the upload is running
         let mut progress_counter = 0;
         let progress_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-        
+
         loop {
             match child.try_wait() {
                 Ok(Some(status)) => {
                     // Process finished
                     print!("\r✅ Upload completed!                    \n");
-                    
-                    let output = child.wait_with_output()
-                        .map_err(|e| PowerCliError::Io(e))?;
-                    
+
+                    let output = child.wait_with_output().map_err(|e| PowerCliError::Io(e))?;
+
                     let stdout = String::from_utf8_lossy(&output.stdout);
                     let stderr = String::from_utf8_lossy(&output.stderr);
 
@@ -247,8 +271,10 @@ impl FirmwareManager {
                         });
                     }
 
-                    return Ok(format!("Firmware uploaded successfully: {}", 
-                                    firmware_path.file_name().unwrap().to_string_lossy()));
+                    return Ok(format!(
+                        "Firmware uploaded successfully: {}",
+                        firmware_path.file_name().unwrap().to_string_lossy()
+                    ));
                 }
                 Ok(None) => {
                     // Process still running, show progress
@@ -256,7 +282,7 @@ impl FirmwareManager {
                     print!("\r{} Uploading firmware... Please wait", spinner);
                     std::io::stdout().flush().unwrap();
                     progress_counter += 1;
-                    
+
                     // Wait a bit before checking again
                     sleep(Duration::from_millis(100)).await;
                 }
@@ -270,12 +296,14 @@ impl FirmwareManager {
     /// Reset PMU using mcumgr
     async fn mcumgr_reset(&mut self) -> Result<String, PowerCliError> {
         info!("Resetting PMU using mcumgr");
-        
+
         let output = Command::new("mcumgr")
             .args(&[
-                "--conntype", "serial",
-                "--connstring", &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
-                "reset"
+                "--conntype",
+                "serial",
+                "--connstring",
+                &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
+                "reset",
             ])
             .output()
             .map_err(|e| PowerCliError::Io(e))?;
@@ -284,7 +312,7 @@ impl FirmwareManager {
         // So we don't strictly check the exit code
         let _stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         if !stderr.is_empty() && !stderr.contains("timeout") {
             warn!("mcumgr reset stderr: {}", stderr);
         }
@@ -295,26 +323,31 @@ impl FirmwareManager {
     /// Verify new firmware is running
     async fn verify_new_firmware(&mut self) -> Result<String, PowerCliError> {
         debug!("Verifying new firmware is running");
-        
+
         // Give firmware a bit more time to fully initialize
         sleep(Duration::from_millis(2000)).await;
-        
+
         // Try to connect and get version
         self.connection.connect().await?;
         let response = self.connection.send_command("version").await?;
-        
-        Ok(format!("New firmware version: {}", response.lines().next().unwrap_or("Unknown")))
+
+        Ok(format!(
+            "New firmware version: {}",
+            response.lines().next().unwrap_or("Unknown")
+        ))
     }
 
     /// Get bootloader information
     async fn get_bootloader_info(&mut self) -> Result<String, PowerCliError> {
         debug!("Getting bootloader information");
-        
+
         let output = Command::new("mcumgr")
             .args(&[
-                "--conntype", "serial",
-                "--connstring", &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
-                "taskstat"
+                "--conntype",
+                "serial",
+                "--connstring",
+                &format!("{},baud={}", self.mcumgr_port, self.mcumgr_baud),
+                "taskstat",
             ])
             .output()
             .map_err(|e| PowerCliError::Io(e))?;

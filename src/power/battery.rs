@@ -10,14 +10,14 @@ use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 /// Battery monitoring interface
-#[allow(dead_code)]  // Future use - comprehensive battery monitoring
+#[allow(dead_code)] // Future use - comprehensive battery monitoring
 pub struct BatteryMonitor {
     protocol: Protocol,
 }
 
 impl BatteryMonitor {
     /// Create a new battery monitor instance
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub fn new(connection: Connection) -> Self {
         Self {
             protocol: Protocol::new(connection),
@@ -25,7 +25,7 @@ impl BatteryMonitor {
     }
 
     /// Read current battery status
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub async fn read_status(&mut self) -> Result<BatteryStatus> {
         info!("Reading battery status");
 
@@ -34,7 +34,7 @@ impl BatteryMonitor {
     }
 
     /// Get battery device status
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub async fn get_device_status(&mut self) -> Result<String> {
         info!("Getting battery device status");
 
@@ -42,7 +42,7 @@ impl BatteryMonitor {
     }
 
     /// Enable battery monitoring
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub async fn enable_monitoring(&mut self) -> Result<String> {
         info!("Enabling battery monitoring");
 
@@ -50,7 +50,7 @@ impl BatteryMonitor {
     }
 
     /// Disable battery monitoring
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub async fn disable_monitoring(&mut self) -> Result<String> {
         info!("Disabling battery monitoring");
 
@@ -58,7 +58,7 @@ impl BatteryMonitor {
     }
 
     /// Parse battery response into structured data
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     fn parse_battery_response(&self, response: &str) -> Result<BatteryStatus> {
         debug!("Parsing battery response: {}", response);
 
@@ -97,25 +97,25 @@ pub struct BatteryStatus {
 
 impl BatteryStatus {
     /// Calculate power in milliwatts
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub fn power_mw(&self) -> i32 {
         (self.voltage_mv as i32 * self.current_ma as i32) / 1000
     }
 
     /// Check if battery is charging
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub fn is_charging(&self) -> bool {
         self.current_ma > 0
     }
 
     /// Check if battery voltage is low
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub fn is_low_voltage(&self, threshold_mv: u16) -> bool {
         self.voltage_mv < threshold_mv
     }
 
     /// Format for human-readable display
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub fn format_human(&self) -> String {
         format!(
             "📊 Battery Status:\n   🔋 Voltage: {} mV\n   ⚡ Current: {} mA\n   🔋 Charge: {} mAh\n   🌡️  Temperature: {}°C\n   ⚡ Power: {} mW",

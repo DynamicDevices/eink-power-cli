@@ -33,7 +33,7 @@ impl Connection {
     }
 
     /// Set command timeout
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub fn set_timeout(&mut self, timeout_secs: u64) {
         self.timeout_duration = Duration::from_secs(timeout_secs);
     }
@@ -47,7 +47,10 @@ impl Connection {
 
         // Log port usage at info level unless quiet mode is enabled
         if !self.quiet {
-            info!("Using serial port: {} at {} baud", self.device_path, self.baud_rate);
+            info!(
+                "Using serial port: {} at {} baud",
+                self.device_path, self.baud_rate
+            );
         }
 
         // Check if device exists
@@ -91,19 +94,19 @@ impl Connection {
         let response = timeout(self.timeout_duration, async {
             let mut buffer = Vec::new();
             let mut temp_buf = [0u8; 1024];
-            
+
             loop {
                 match stream.read(&mut temp_buf).await {
                     Ok(0) => break, // EOF
                     Ok(n) => {
                         buffer.extend_from_slice(&temp_buf[..n]);
                         let response_str = String::from_utf8_lossy(&buffer);
-                        
+
                         // Look for shell prompt indicating end of response
                         if response_str.contains("prod:~$") || response_str.contains("debug:~$") {
                             break;
                         }
-                        
+
                         // Also break on timeout if we have some data
                         if buffer.len() > 0 && response_str.trim().len() > 0 {
                             // Give a small additional delay for any remaining data
@@ -114,7 +117,7 @@ impl Connection {
                     Err(e) => return Err(PowerCliError::Io(e)),
                 }
             }
-            
+
             Ok(String::from_utf8_lossy(&buffer).to_string())
         })
         .await
@@ -123,7 +126,7 @@ impl Connection {
         })??;
 
         debug!("Received response: {}", response);
-        
+
         // Clean up the response by removing the command echo and prompt
         let cleaned_response = self.clean_response(&response, command);
         Ok(cleaned_response)
@@ -150,7 +153,7 @@ impl Connection {
         let response = timeout(short_timeout, async {
             let mut buffer = Vec::new();
             let mut temp_buf = [0u8; 1024];
-            
+
             // Try to read some response, but don't wait for full prompt
             match stream.read(&mut temp_buf).await {
                 Ok(n) if n > 0 => {
@@ -158,7 +161,7 @@ impl Connection {
                 }
                 _ => {} // Ignore errors or empty reads
             }
-            
+
             String::from_utf8_lossy(&buffer).to_string()
         })
         .await
@@ -171,12 +174,12 @@ impl Connection {
     /// Clean up the response by removing command echo and shell prompt
     fn clean_response(&self, response: &str, command: &str) -> String {
         let mut lines: Vec<&str> = response.lines().collect();
-        
+
         // Remove command echo (usually the first line)
         if !lines.is_empty() && lines[0].trim() == command.trim() {
             lines.remove(0);
         }
-        
+
         // Remove shell prompt (usually the last line)
         if !lines.is_empty() {
             let last_line = lines[lines.len() - 1].trim();
@@ -184,19 +187,19 @@ impl Connection {
                 lines.pop();
             }
         }
-        
+
         // Join remaining lines and trim
         lines.join("\n").trim().to_string()
     }
 
     /// Check if connection is active
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub fn is_connected(&self) -> bool {
         self.stream.is_some()
     }
 
     /// Disconnect from the serial device
-    #[allow(dead_code)]  // Future use
+    #[allow(dead_code)] // Future use
     pub async fn disconnect(&mut self) {
         if let Some(_stream) = self.stream.take() {
             debug!("Disconnected from {}", self.device_path);
