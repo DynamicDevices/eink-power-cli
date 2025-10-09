@@ -120,6 +120,72 @@ async fn execute_command(
                 }
             }
         }
+        Commands::Ltc2959(ltc2959_cmd) => {
+            use cli::Ltc2959Commands;
+            match ltc2959_cmd {
+                Ltc2959Commands::Init => {
+                    let response = controller.control_ltc2959("init").await?;
+                    if !cli.quiet {
+                        println!("🔋 LTC2959 Initialization:");
+                        println!("{}", response);
+                    }
+                }
+                Ltc2959Commands::Read => {
+                    let response = controller.control_ltc2959("read").await?;
+                    if !cli.quiet {
+                        println!("📊 LTC2959 Readings:");
+                        println!("{}", response);
+                    }
+                }
+                Ltc2959Commands::Status => {
+                    let response = controller.control_ltc2959("status").await?;
+                    if !cli.quiet {
+                        println!("📋 LTC2959 Status:");
+                        println!("{}", response);
+                    }
+                }
+                Ltc2959Commands::Enable => {
+                    let response = controller.control_ltc2959("enable").await?;
+                    if !cli.quiet {
+                        println!("✅ LTC2959 Enabled:");
+                        println!("{}", response);
+                    }
+                }
+                Ltc2959Commands::Disable => {
+                    let response = controller.control_ltc2959("disable").await?;
+                    if !cli.quiet {
+                        println!("❌ LTC2959 Disabled:");
+                        println!("{}", response);
+                    }
+                }
+                Ltc2959Commands::Scan => {
+                    let response = controller.control_ltc2959("scan").await?;
+                    if !cli.quiet {
+                        println!("🔍 LTC2959 I2C Scan:");
+                        println!("{}", response);
+                    }
+                }
+                Ltc2959Commands::CcGpio { state } => {
+                    let cmd = match state {
+                        cli::PowerState::On => "cc_gpio on",
+                        cli::PowerState::Off => "cc_gpio off",
+                        cli::PowerState::Status => "cc_gpio status",
+                    };
+                    let response = controller.control_ltc2959(cmd).await?;
+                    if !cli.quiet {
+                        println!("🔌 LTC2959 CC_GPIO:");
+                        println!("{}", response);
+                    }
+                }
+                Ltc2959Commands::ProductionReset => {
+                    let response = controller.control_ltc2959("production_reset").await?;
+                    if !cli.quiet {
+                        println!("🏭 LTC2959 Production Reset:");
+                        println!("{}", response);
+                    }
+                }
+            }
+        }
         Commands::Power(power_cmd) => {
             use cli::{PowerCommands, PowerState};
             match power_cmd {

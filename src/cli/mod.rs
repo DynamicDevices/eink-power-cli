@@ -87,6 +87,10 @@ pub enum Commands {
     #[command(subcommand)]
     Board(BoardCommands),
 
+    /// LTC2959 coulomb counter commands
+    #[command(subcommand)]
+    Ltc2959(Ltc2959Commands),
+
     /// Power management commands
     #[command(subcommand)]
     Pm(PowerManagementCommands),
@@ -230,6 +234,31 @@ pub enum PowerManagementCommands {
 pub enum BoardCommands {
     /// Reset the E-Ink controller board (power cycle)
     Reset,
+}
+
+/// LTC2959 coulomb counter commands
+#[derive(Subcommand, Debug, Clone)]
+pub enum Ltc2959Commands {
+    /// Initialize LTC2959 coulomb counter
+    Init,
+    /// Read voltage, current, charge, power
+    Read,
+    /// Show device status and alert flags
+    Status,
+    /// Enable ADC measurements (smart sleep)
+    Enable,
+    /// Disable ADC (ultra-low power mode)
+    Disable,
+    /// Scan I2C bus for LTC2959 device
+    Scan,
+    /// Control CC_GPIO pin
+    CcGpio {
+        /// GPIO state
+        #[arg(value_enum)]
+        state: PowerState,
+    },
+    /// Reset for fresh battery installation
+    ProductionReset,
 }
 
 /// Power states

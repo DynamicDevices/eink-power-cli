@@ -94,6 +94,31 @@ impl Protocol {
         let full_command = format!("board {}", command);
         debug!("Executing board command: {}", full_command);
 
+        // Special handling for reset command - it will cause connection loss
+        if command == "reset" {
+            return self.execute_board_reset_command(&full_command).await;
+        }
+
+        let response = self.connection.send_command(&full_command).await?;
+        self.parse_response(&response)
+    }
+
+    /// Execute board reset command with special handling for connection loss
+    async fn execute_board_reset_command(&mut self, command: &str) -> Result<String> {
+        debug!("Executing board reset command with short timeout");
+        
+        // Send the command but don't wait for a full response since the board will reset
+        let _response = self.connection.send_command_with_short_timeout(command).await?;
+        
+        // Return a success message regardless of response since reset will cut connection
+        Ok("Board reset sequence initiated. Connection will be lost during power cycle.".to_string())
+    }
+
+    /// Execute an LTC2959 coulomb counter command
+    pub async fn execute_ltc2959_command(&mut self, command: &str) -> Result<String> {
+        let full_command = format!("ltc2959 {}", command);
+        debug!("Executing LTC2959 command: {}", full_command);
+
         let response = self.connection.send_command(&full_command).await?;
         self.parse_response(&response)
     }

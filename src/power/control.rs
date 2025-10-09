@@ -115,6 +115,12 @@ impl PowerController {
         }
     }
 
+    /// Control LTC2959 coulomb counter
+    pub async fn control_ltc2959(&mut self, command: &str) -> Result<String> {
+        debug!("Controlling LTC2959: {}", command);
+        self.protocol.execute_ltc2959_command(command).await
+    }
+
     /// Parse power statistics response
     fn parse_power_stats(&self, response: &str) -> Result<PowerStats> {
         debug!("Parsing power stats: {}", response);

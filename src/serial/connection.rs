@@ -128,6 +128,45 @@ impl Connection {
         Ok(cleaned_response)
     }
 
+    /// Send a command with a short timeout (for commands that may cause connection loss)
+    pub async fn send_command_with_short_timeout(&mut self, command: &str) -> Result<String> {
+        // Auto-connect if not already connected
+        if self.stream.is_none() {
+            debug!("Auto-connecting to device before sending command");
+            self.connect().await?;
+        }
+
+        let stream = self.stream.as_mut().unwrap();
+        debug!("Sending command with short timeout: {}", command);
+
+        // Send command with newline
+        let command_with_newline = format!("{}\n", command);
+        stream.write_all(command_with_newline.as_bytes()).await?;
+        stream.flush().await?;
+
+        // Use a very short timeout (500ms) for commands that may cause connection loss
+        let short_timeout = Duration::from_millis(500);
+        let response = timeout(short_timeout, async {
+            let mut buffer = Vec::new();
+            let mut temp_buf = [0u8; 1024];
+            
+            // Try to read some response, but don't wait for full prompt
+            match stream.read(&mut temp_buf).await {
+                Ok(n) if n > 0 => {
+                    buffer.extend_from_slice(&temp_buf[..n]);
+                }
+                _ => {} // Ignore errors or empty reads
+            }
+            
+            String::from_utf8_lossy(&buffer).to_string()
+        })
+        .await
+        .unwrap_or_else(|_| "Command sent (timeout expected for reset commands)".to_string());
+
+        debug!("Received response (short timeout): {}", response);
+        Ok(response)
+    }
+
     /// Clean up the response by removing command echo and shell prompt
     fn clean_response(&self, response: &str, command: &str) -> String {
         let mut lines: Vec<&str> = response.lines().collect();
