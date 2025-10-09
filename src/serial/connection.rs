@@ -108,7 +108,7 @@ impl Connection {
                         }
 
                         // Also break on timeout if we have some data
-                        if buffer.len() > 0 && response_str.trim().len() > 0 {
+                        if !buffer.is_empty() && !response_str.trim().is_empty() {
                             // Give a small additional delay for any remaining data
                             tokio::time::sleep(Duration::from_millis(100)).await;
                             break;

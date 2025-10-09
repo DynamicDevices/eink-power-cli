@@ -35,7 +35,7 @@ impl FirmwareManager {
         info!("Listing firmware images using mcumgr");
 
         let output = Command::new("mcumgr")
-            .args(&[
+            .args([
                 "--conntype",
                 "serial",
                 "--connstring",
@@ -44,7 +44,7 @@ impl FirmwareManager {
                 "list",
             ])
             .output()
-            .map_err(|e| PowerCliError::Io(e))?;
+            .map_err(PowerCliError::Io)?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -200,7 +200,7 @@ impl FirmwareManager {
         debug!("Verifying bootloader mode with mcumgr");
 
         let output = Command::new("mcumgr")
-            .args(&[
+            .args([
                 "--conntype",
                 "serial",
                 "--connstring",
@@ -209,7 +209,7 @@ impl FirmwareManager {
                 "bootloader_test",
             ])
             .output()
-            .map_err(|e| PowerCliError::Io(e))?;
+            .map_err(PowerCliError::Io)?;
 
         if output.status.success() {
             Ok("Bootloader responding".to_string())
@@ -226,7 +226,7 @@ impl FirmwareManager {
 
         // Get file size for progress indication
         let file_size = std::fs::metadata(firmware_path)
-            .map_err(|e| PowerCliError::Io(e))?
+            .map_err(PowerCliError::Io)?
             .len();
 
         println!(
@@ -236,7 +236,7 @@ impl FirmwareManager {
         );
 
         let mut child = Command::new("mcumgr")
-            .args(&[
+            .args([
                 "--conntype",
                 "serial",
                 "--connstring",
@@ -248,7 +248,7 @@ impl FirmwareManager {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
-            .map_err(|e| PowerCliError::Io(e))?;
+            .map_err(PowerCliError::Io)?;
 
         // Show progress while the upload is running
         let mut progress_counter = 0;
@@ -260,7 +260,7 @@ impl FirmwareManager {
                     // Process finished
                     print!("\r✅ Upload completed!                    \n");
 
-                    let output = child.wait_with_output().map_err(|e| PowerCliError::Io(e))?;
+                    let output = child.wait_with_output().map_err(PowerCliError::Io)?;
 
                     let stdout = String::from_utf8_lossy(&output.stdout);
                     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -298,7 +298,7 @@ impl FirmwareManager {
         info!("Resetting PMU using mcumgr");
 
         let output = Command::new("mcumgr")
-            .args(&[
+            .args([
                 "--conntype",
                 "serial",
                 "--connstring",
@@ -306,7 +306,7 @@ impl FirmwareManager {
                 "reset",
             ])
             .output()
-            .map_err(|e| PowerCliError::Io(e))?;
+            .map_err(PowerCliError::Io)?;
 
         // mcumgr reset may not return success if the device resets immediately
         // So we don't strictly check the exit code
@@ -342,7 +342,7 @@ impl FirmwareManager {
         debug!("Getting bootloader information");
 
         let output = Command::new("mcumgr")
-            .args(&[
+            .args([
                 "--conntype",
                 "serial",
                 "--connstring",
@@ -350,7 +350,7 @@ impl FirmwareManager {
                 "taskstat",
             ])
             .output()
-            .map_err(|e| PowerCliError::Io(e))?;
+            .map_err(PowerCliError::Io)?;
 
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
