@@ -33,6 +33,7 @@ impl Connection {
     }
 
     /// Set command timeout
+    #[allow(dead_code)]  // Future use
     pub fn set_timeout(&mut self, timeout_secs: u64) {
         self.timeout_duration = Duration::from_secs(timeout_secs);
     }
@@ -189,11 +190,13 @@ impl Connection {
     }
 
     /// Check if connection is active
+    #[allow(dead_code)]  // Future use
     pub fn is_connected(&self) -> bool {
         self.stream.is_some()
     }
 
     /// Disconnect from the serial device
+    #[allow(dead_code)]  // Future use
     pub async fn disconnect(&mut self) {
         if let Some(_stream) = self.stream.take() {
             debug!("Disconnected from {}", self.device_path);

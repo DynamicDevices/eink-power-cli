@@ -8,6 +8,7 @@ use thiserror::Error;
 
 /// Main error type for the E-ink Power CLI application
 #[derive(Error, Debug)]
+#[allow(dead_code)]  // Some variants are defined for future use
 pub enum PowerCliError {
     /// Serial communication errors
     #[error("Serial communication error: {0}")]

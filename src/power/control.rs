@@ -121,6 +121,71 @@ impl PowerController {
         self.protocol.execute_ltc2959_command(command).await
     }
 
+    /// Get coulomb counter readings (power coulomb command)
+    pub async fn get_coulomb_counter(&mut self) -> Result<String> {
+        debug!("Getting coulomb counter readings");
+        self.protocol.execute_system_command("power coulomb").await
+    }
+
+    /// Get system information
+    pub async fn get_system_info_detailed(&mut self) -> Result<String> {
+        debug!("Getting detailed system information");
+        self.protocol.execute_system_command("system info").await
+    }
+
+    /// Get system uptime
+    pub async fn get_system_uptime(&mut self) -> Result<String> {
+        debug!("Getting system uptime");
+        self.protocol.execute_system_command("system uptime").await
+    }
+
+    /// Reboot the system
+    pub async fn reboot_system(&mut self) -> Result<String> {
+        debug!("Rebooting system");
+        self.protocol.execute_system_command("system reset").await
+    }
+
+    /// Battery read (maps to ltc2959 read)
+    pub async fn battery_read(&mut self) -> Result<String> {
+        debug!("Reading battery measurements");
+        self.protocol.execute_ltc2959_command("read").await
+    }
+
+    /// Battery status (maps to ltc2959 status)
+    pub async fn battery_status(&mut self) -> Result<String> {
+        debug!("Getting battery status");
+        self.protocol.execute_ltc2959_command("status").await
+    }
+
+    /// Enable battery monitoring (maps to ltc2959 enable)
+    pub async fn battery_enable(&mut self) -> Result<String> {
+        debug!("Enabling battery monitoring");
+        self.protocol.execute_ltc2959_command("enable").await
+    }
+
+    /// Disable battery monitoring (maps to ltc2959 disable)
+    pub async fn battery_disable(&mut self) -> Result<String> {
+        debug!("Disabling battery monitoring");
+        self.protocol.execute_ltc2959_command("disable").await
+    }
+
+    /// Execute power management commands
+    pub async fn pm_stats(&mut self) -> Result<String> {
+        debug!("Getting power management statistics");
+        self.protocol.execute_pm_command("stats").await
+    }
+
+    pub async fn pm_command(&mut self, cmd: &str) -> Result<String> {
+        debug!("Executing PM command: {}", cmd);
+        self.protocol.execute_pm_command(cmd).await
+    }
+
+    /// Execute NFC commands
+    pub async fn nfc_command(&mut self, cmd: &str) -> Result<String> {
+        debug!("Executing NFC command: {}", cmd);
+        self.protocol.execute_nfc_command(cmd).await
+    }
+
     /// Parse power statistics response
     fn parse_power_stats(&self, response: &str) -> Result<PowerStats> {
         debug!("Parsing power stats: {}", response);

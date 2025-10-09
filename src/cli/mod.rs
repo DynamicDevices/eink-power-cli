@@ -154,6 +154,8 @@ pub enum PowerCommands {
     },
     /// Show power statistics
     Stats,
+    /// Show battery coulomb counter readings
+    Coulomb,
 }
 
 /// Battery monitoring commands

@@ -35,6 +35,7 @@
 
 pub mod cli;
 pub mod error;
+pub mod json;
 pub mod power;
 pub mod serial;
 

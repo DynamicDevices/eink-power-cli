@@ -38,6 +38,7 @@ impl Protocol {
     }
 
     /// Execute a battery monitoring command
+    #[allow(dead_code)]  // Future use
     pub async fn execute_battery_command(&mut self, command: &str) -> Result<String> {
         let full_command = if command == "read" {
             "ltc2959 read".to_string()
@@ -140,6 +141,7 @@ impl Protocol {
     }
 
     /// Parse battery data from response
+    #[allow(dead_code)]  // Future use
     pub fn parse_battery_data(&self, response: &str) -> Result<BatteryData> {
         debug!("Parsing battery data from: {}", response);
 
@@ -154,6 +156,7 @@ impl Protocol {
     }
 
     /// Format response as JSON
+    #[allow(dead_code)]  // Future use
     pub fn format_as_json(&self, data: &str) -> Result<Value> {
         // TODO: Implement JSON formatting
         // For now, create a simple JSON structure
@@ -165,10 +168,20 @@ impl Protocol {
 
         Ok(json)
     }
+
+    /// Execute a power management command
+    pub async fn execute_pm_command(&mut self, command: &str) -> Result<String> {
+        let full_command = format!("pm {}", command);
+        debug!("Executing PM command: {}", full_command);
+
+        let response = self.connection.send_command(&full_command).await?;
+        self.parse_response(&response)
+    }
 }
 
 /// Battery monitoring data structure
 #[derive(Debug, Clone)]
+#[allow(dead_code)]  // Future use
 pub struct BatteryData {
     pub voltage_mv: u16,
     pub current_ma: i16,

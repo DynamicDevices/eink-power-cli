@@ -17,6 +17,7 @@ use std::process;
 
 mod cli;
 mod error;
+mod json;
 mod power;
 mod serial;
 
@@ -86,6 +87,64 @@ async fn run(cli: Cli) -> Result<(), PowerCliError> {
     }
 }
 
+/// Output a response in the requested format
+fn output_response(cli: &Cli, command: &str, response: &str, emoji: &str, title: &str) -> Result<(), PowerCliError> {
+    if cli.quiet {
+        return Ok(());
+    }
+
+    match cli.format {
+        cli::OutputFormat::Human => {
+            println!("{} {}:", emoji, title);
+            println!("{}", response);
+        }
+        cli::OutputFormat::Json => {
+            // Try to parse the response into structured JSON based on command type
+            let json_data = match command {
+                cmd if cmd.contains("battery") || cmd.contains("coulomb") => {
+                    let battery_data = json::ResponseParser::parse_battery_response(response);
+                    serde_json::to_value(battery_data)?
+                }
+                cmd if cmd.contains("system") || cmd.contains("version") => {
+                    let system_data = json::ResponseParser::parse_system_info(response);
+                    serde_json::to_value(system_data)?
+                }
+                cmd if cmd.contains("nfc") => {
+                    let nfc_data = json::ResponseParser::parse_nfc_status(response);
+                    serde_json::to_value(nfc_data)?
+                }
+                cmd if cmd.contains("ltc2959") => {
+                    let ltc_data = json::ResponseParser::parse_ltc2959_status(response);
+                    serde_json::to_value(ltc_data)?
+                }
+                cmd if cmd.contains("gpio") => {
+                    // For GPIO, we need to extract port and pin from the command
+                    // This is a simplified approach - in a real implementation, you'd pass these as parameters
+                    let gpio_data = json::ResponseParser::parse_gpio_response(response, "unknown", 0);
+                    serde_json::to_value(gpio_data)?
+                }
+                _ => {
+                    // Generic response - just wrap the raw text
+                    serde_json::json!({
+                        "raw_response": response,
+                        "parsed": false
+                    })
+                }
+            };
+
+            let json_response = json::JsonResponse::success_with_raw(command, json_data, response);
+            println!("{}", serde_json::to_string_pretty(&json_response)?);
+        }
+        cli::OutputFormat::Csv => {
+            // CSV format - simplified implementation
+            println!("timestamp,command,status,response");
+            println!("{},{},success,\"{}\"", chrono::Utc::now().to_rfc3339(), command, response.replace("\"", "\"\""));
+        }
+    }
+
+    Ok(())
+}
+
 /// Execute a specific command
 async fn execute_command(
     command: cli::Commands,
@@ -97,16 +156,11 @@ async fn execute_command(
     match command {
         Commands::Version => {
             let response = controller.get_system_info().await?;
-            if !cli.quiet {
-                println!("🔧 PMU Controller Version:");
-                println!("{}", response);
-            }
+            output_response(cli, "version", &response, "🔧", "PMU Controller Version")?;
         }
         Commands::Ping => {
             let response = controller.ping().await?;
-            if !cli.quiet {
-                println!("🏓 Ping response: {}", response);
-            }
+            output_response(cli, "ping", &response, "🏓", "Ping response")?;
         }
         Commands::Board(board_cmd) => {
             use cli::BoardCommands;
@@ -231,6 +285,10 @@ async fn execute_command(
                         println!("{}", stats.format_human());
                     }
                 }
+                PowerCommands::Coulomb => {
+                    let response = controller.get_coulomb_counter().await?;
+                    output_response(cli, "power coulomb", &response, "🔋", "Coulomb Counter")?;
+                }
             }
         }
         Commands::Gpio(gpio_cmd) => {
@@ -247,6 +305,130 @@ async fn execute_command(
                     let response = controller.control_gpio(&port, pin, power::control::GpioAction::Set(value)).await?;
                     if !cli.quiet {
                         println!("📌 GPIO {}{} set to {}:", port, pin, value);
+                        println!("{}", response);
+                    }
+                }
+            }
+        }
+        Commands::System(system_cmd) => {
+            use cli::SystemCommands;
+            match system_cmd {
+                SystemCommands::Info => {
+                    let response = controller.get_system_info_detailed().await?;
+                    output_response(cli, "system info", &response, "🖥️", "System Information")?;
+                }
+                SystemCommands::Reboot => {
+                    let response = controller.reboot_system().await?;
+                    output_response(cli, "system reboot", &response, "🔄", "System Reboot")?;
+                }
+                SystemCommands::Uptime => {
+                    let response = controller.get_system_uptime().await?;
+                    output_response(cli, "system uptime", &response, "⏱️", "System Uptime")?;
+                }
+            }
+        }
+        Commands::Battery(battery_cmd) => {
+            use cli::BatteryCommands;
+            match battery_cmd {
+                BatteryCommands::Read => {
+                    let response = controller.battery_read().await?;
+                    output_response(cli, "battery read", &response, "🔋", "Battery Measurements")?;
+                }
+                BatteryCommands::Status => {
+                    let response = controller.battery_status().await?;
+                    output_response(cli, "battery status", &response, "📋", "Battery Status")?;
+                }
+                BatteryCommands::Enable => {
+                    let response = controller.battery_enable().await?;
+                    output_response(cli, "battery enable", &response, "✅", "Battery Monitoring Enabled")?;
+                }
+                BatteryCommands::Disable => {
+                    let response = controller.battery_disable().await?;
+                    output_response(cli, "battery disable", &response, "❌", "Battery Monitoring Disabled")?;
+                }
+            }
+        }
+        Commands::Pm(pm_cmd) => {
+            use cli::PowerManagementCommands;
+            match pm_cmd {
+                PowerManagementCommands::Stats => {
+                    let response = controller.pm_stats().await?;
+                    if !cli.quiet {
+                        println!("📊 Power Management Statistics:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::Sleep { timeout } => {
+                    let cmd = if let Some(timeout_ms) = timeout {
+                        format!("deep_sleep {}", timeout_ms)
+                    } else {
+                        "deep_sleep".to_string()
+                    };
+                    let response = controller.pm_command(&cmd).await?;
+                    if !cli.quiet {
+                        println!("😴 Entering Deep Sleep:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::Monitor { action, interval } => {
+                    let cmd = match action {
+                        cli::MonitorAction::Start => {
+                            if let Some(interval_s) = interval {
+                                format!("monitor start {}", interval_s)
+                            } else {
+                                "monitor start".to_string()
+                            }
+                        }
+                        cli::MonitorAction::Stop => "monitor stop".to_string(),
+                    };
+                    let response = controller.pm_command(&cmd).await?;
+                    if !cli.quiet {
+                        println!("📊 Power Monitoring:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::BatteryCheck => {
+                    let response = controller.pm_command("battery_check").await?;
+                    if !cli.quiet {
+                        println!("🔋 Battery Health Check:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::Imx93 { state } => {
+                    let cmd = match state {
+                        cli::PowerState::On => "imx93 on",
+                        cli::PowerState::Off => "imx93 off", 
+                        cli::PowerState::Status => "imx93 status",
+                    };
+                    let response = controller.pm_command(cmd).await?;
+                    if !cli.quiet {
+                        println!("🖥️ i.MX93 Power Control:");
+                        println!("{}", response);
+                    }
+                }
+            }
+        }
+        Commands::Nfc(nfc_cmd) => {
+            use cli::NfcCommands;
+            match nfc_cmd {
+                NfcCommands::Status => {
+                    let response = controller.nfc_command("status").await?;
+                    if !cli.quiet {
+                        println!("📡 NFC Status:");
+                        println!("{}", response);
+                    }
+                }
+                NfcCommands::Info => {
+                    let response = controller.nfc_command("info").await?;
+                    if !cli.quiet {
+                        println!("ℹ️ NFC Device Information:");
+                        println!("{}", response);
+                    }
+                }
+                NfcCommands::FieldDetect => {
+                    let response = controller.nfc_command("field_detect").await?;
+                    if !cli.quiet {
+                        println!("📡 NFC Field Detection:");
                         println!("{}", response);
                     }
                 }
