@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("E-ink Power CLI - Basic Usage Example");
 
     // Create connection to power controller
-    let mut connection = Connection::new("/dev/ttyUSB0", 115200)?;
+    let mut connection = Connection::new("/dev/ttyUSB0", 115200, false)?;
     connection.set_timeout(5);
 
     // Connect to the device

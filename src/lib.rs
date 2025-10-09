@@ -22,7 +22,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let mut conn = Connection::new("/dev/ttyUSB0", 115200)?;
+//!     let mut conn = Connection::new("/dev/ttyUSB0", 115200, false)?;
 //!     conn.connect().await?;
 //!     
 //!     let mut battery = BatteryMonitor::new(conn);
