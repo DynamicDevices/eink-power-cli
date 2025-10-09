@@ -89,6 +89,15 @@ impl Protocol {
         self.parse_response(&response)
     }
 
+    /// Execute a board control command
+    pub async fn execute_board_command(&mut self, command: &str) -> Result<String> {
+        let full_command = format!("board {}", command);
+        debug!("Executing board command: {}", full_command);
+
+        let response = self.connection.send_command(&full_command).await?;
+        self.parse_response(&response)
+    }
+
     /// Parse the response from the controller
     fn parse_response(&self, response: &str) -> Result<String> {
         debug!("Parsing response: {}", response);

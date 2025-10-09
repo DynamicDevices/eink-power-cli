@@ -62,13 +62,14 @@ async fn main() {
 async fn run(cli: Cli) -> Result<(), PowerCliError> {
     info!("Starting eink-power-cli v{}", VERSION);
 
-    // TODO: Implement command execution
-    // This will be implemented in Phase 1
+    // Create serial connection
+    let connection = serial::Connection::new(&cli.device, cli.baud)?;
+    let mut power_controller = power::control::PowerController::new(connection);
+
     match cli.command {
-        Some(cmd) => {
+        Some(ref cmd) => {
             info!("Executing command: {:?}", cmd);
-            // Command execution will be implemented here
-            println!("Command execution not yet implemented");
+            execute_command(cmd.clone(), &mut power_controller, &cli).await?;
             Ok(())
         }
         None => {
@@ -77,4 +78,112 @@ async fn run(cli: Cli) -> Result<(), PowerCliError> {
             Ok(())
         }
     }
+}
+
+/// Execute a specific command
+async fn execute_command(
+    command: cli::Commands,
+    controller: &mut power::control::PowerController,
+    cli: &Cli,
+) -> Result<(), PowerCliError> {
+    use cli::Commands;
+    
+    match command {
+        Commands::Version => {
+            let response = controller.get_system_info().await?;
+            if !cli.quiet {
+                println!("🔧 PMU Controller Version:");
+                println!("{}", response);
+            }
+        }
+        Commands::Ping => {
+            let response = controller.ping().await?;
+            if !cli.quiet {
+                println!("🏓 Ping response: {}", response);
+            }
+        }
+        Commands::Board(board_cmd) => {
+            use cli::BoardCommands;
+            match board_cmd {
+                BoardCommands::Reset => {
+                    let response = controller.control_board(power::control::BoardAction::Reset).await?;
+                    if !cli.quiet {
+                        println!("🔄 Board reset initiated:");
+                        println!("{}", response);
+                    }
+                }
+            }
+        }
+        Commands::Power(power_cmd) => {
+            use cli::{PowerCommands, PowerState};
+            match power_cmd {
+                PowerCommands::Pmic { state } => {
+                    let power_state = match state {
+                        PowerState::On => power::control::PowerState::On,
+                        PowerState::Off => power::control::PowerState::Off,
+                        PowerState::Status => power::control::PowerState::Status,
+                    };
+                    let response = controller.control_pmic(power_state).await?;
+                    if !cli.quiet {
+                        println!("⚡ PMIC Control:");
+                        println!("{}", response);
+                    }
+                }
+                PowerCommands::Wifi { state } => {
+                    let power_state = match state {
+                        PowerState::On => power::control::PowerState::On,
+                        PowerState::Off => power::control::PowerState::Off,
+                        PowerState::Status => power::control::PowerState::Status,
+                    };
+                    let response = controller.control_wifi(power_state).await?;
+                    if !cli.quiet {
+                        println!("📶 WiFi Control:");
+                        println!("{}", response);
+                    }
+                }
+                PowerCommands::Disp { state } => {
+                    let power_state = match state {
+                        PowerState::On => power::control::PowerState::On,
+                        PowerState::Off => power::control::PowerState::Off,
+                        PowerState::Status => power::control::PowerState::Status,
+                    };
+                    let response = controller.control_display(power_state).await?;
+                    if !cli.quiet {
+                        println!("🖥️ Display Control:");
+                        println!("{}", response);
+                    }
+                }
+                PowerCommands::Stats => {
+                    let stats = controller.get_power_stats().await?;
+                    if !cli.quiet {
+                        println!("{}", stats.format_human());
+                    }
+                }
+            }
+        }
+        Commands::Gpio(gpio_cmd) => {
+            use cli::GpioCommands;
+            match gpio_cmd {
+                GpioCommands::Get { port, pin } => {
+                    let response = controller.control_gpio(&port, pin, power::control::GpioAction::Get).await?;
+                    if !cli.quiet {
+                        println!("📌 GPIO {}{}:", port, pin);
+                        println!("{}", response);
+                    }
+                }
+                GpioCommands::Set { port, pin, value } => {
+                    let response = controller.control_gpio(&port, pin, power::control::GpioAction::Set(value)).await?;
+                    if !cli.quiet {
+                        println!("📌 GPIO {}{} set to {}:", port, pin, value);
+                        println!("{}", response);
+                    }
+                }
+            }
+        }
+        _ => {
+            println!("Command not yet implemented: {:?}", command);
+        }
+    }
+    
+    Ok(())
 }

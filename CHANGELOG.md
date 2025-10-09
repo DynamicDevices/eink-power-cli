@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-01-09
+
+### Added
+- Support for PMU firmware v2.2.0+ features
+- New `board reset` command for E-Ink controller power cycling
+- Enhanced command execution framework with proper error handling
+- Complete CLI command structure for all PMU operations
+- Version detection and system information commands
+- GPIO control commands (`gpio get`, `gpio set`)
+- Power control commands (`power pmic`, `power wifi`, `power disp`)
+- Improved version format support (semantic versioning with build metadata)
+
+### Changed
+- Updated CLI framework to support new board control commands
+- Enhanced protocol handler for board command execution
+- Improved error handling and user feedback
+- Updated package description to reflect PMU v2.2.0+ support
+
+### Fixed
+- Compilation errors with command cloning and borrowing
+- Added missing Clone trait implementations for command enums
+
 ## [Unreleased]
 
 ### Added

@@ -66,7 +66,7 @@ pub enum OutputFormat {
 }
 
 /// Available commands
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     /// System commands
     #[command(subcommand)]
@@ -87,6 +87,10 @@ pub enum Commands {
     /// NFC interface commands
     #[command(subcommand)]
     Nfc(NfcCommands),
+
+    /// Board control commands
+    #[command(subcommand)]
+    Board(BoardCommands),
 
     /// Power management commands
     #[command(subcommand)]
@@ -118,7 +122,7 @@ pub enum Commands {
 }
 
 /// System-level commands
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum SystemCommands {
     /// Get system information
     Info,
@@ -129,7 +133,7 @@ pub enum SystemCommands {
 }
 
 /// Power control commands
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum PowerCommands {
     /// Control PMIC power
     Pmic {
@@ -154,7 +158,7 @@ pub enum PowerCommands {
 }
 
 /// Battery monitoring commands
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum BatteryCommands {
     /// Read battery measurements
     Read,
@@ -167,7 +171,7 @@ pub enum BatteryCommands {
 }
 
 /// GPIO control commands
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum GpioCommands {
     /// Read GPIO state
     Get {
@@ -188,7 +192,7 @@ pub enum GpioCommands {
 }
 
 /// NFC interface commands
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum NfcCommands {
     /// Get NFC status
     Status,
@@ -199,7 +203,7 @@ pub enum NfcCommands {
 }
 
 /// Power management commands
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum PowerManagementCommands {
     /// Show power management statistics
     Stats,
@@ -224,6 +228,13 @@ pub enum PowerManagementCommands {
         #[arg(value_enum)]
         state: PowerState,
     },
+}
+
+/// Board control commands
+#[derive(Subcommand, Debug, Clone)]
+pub enum BoardCommands {
+    /// Reset the E-Ink controller board (power cycle)
+    Reset,
 }
 
 /// Power states

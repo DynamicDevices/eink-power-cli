@@ -69,6 +69,18 @@ impl PowerController {
         self.parse_power_stats(&response)
     }
 
+    /// Get system information
+    pub async fn get_system_info(&mut self) -> Result<String> {
+        info!("Getting system information");
+        self.protocol.execute_system_command("version").await
+    }
+
+    /// Ping the controller
+    pub async fn ping(&mut self) -> Result<String> {
+        info!("Pinging controller");
+        self.protocol.execute_system_command("version").await
+    }
+
     /// Control GPIO pin
     pub async fn control_gpio(
         &mut self,
@@ -88,6 +100,17 @@ impl PowerController {
                 self.protocol
                     .execute_gpio_command("set", port, pin, Some(value))
                     .await
+            }
+        }
+    }
+
+    /// Execute board control command
+    pub async fn control_board(&mut self, action: BoardAction) -> Result<String> {
+        info!("Executing board action: {:?}", action);
+
+        match action {
+            BoardAction::Reset => {
+                self.protocol.execute_board_command("reset").await
             }
         }
     }
@@ -123,6 +146,12 @@ pub enum PowerState {
 pub enum GpioAction {
     Get,
     Set(u8),
+}
+
+/// Board control actions
+#[derive(Debug, Clone)]
+pub enum BoardAction {
+    Reset,
 }
 
 /// Power management statistics

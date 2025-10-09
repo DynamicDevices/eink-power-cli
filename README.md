@@ -1,6 +1,8 @@
 # E-ink Power CLI
 
-Command-line interface for communicating with the MCXC143VFM E-ink power management controller over serial UART.
+Command-line interface for communicating with the MCXC143VFM/MCXC144VFM E-ink power management controller over serial UART.
+
+**✨ Now supports PMU firmware v2.2.0+ with enhanced board control features!**
 
 [![CI/CD Pipeline](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/ci.yml)
 [![Maintenance](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/maintenance.yml/badge.svg)](https://github.com/DynamicDevices/eink-power-cli/actions/workflows/maintenance.yml)
@@ -12,13 +14,22 @@ Command-line interface for communicating with the MCXC143VFM E-ink power managem
 
 ## Overview
 
-The E-ink Power CLI is a Rust-based command-line tool designed to communicate with the MCXC143VFM power management controller. It provides a simple, extensible interface for:
+The E-ink Power CLI is a Rust-based command-line tool designed to communicate with the MCXC143VFM/MCXC144VFM power management controller. It provides a simple, extensible interface for:
 
 - **Power Management**: Control PMIC, WiFi, and display power rails
 - **Battery Monitoring**: Real-time LTC2959 coulomb counter readings
 - **System Control**: GPIO manipulation, system information, and diagnostics
+- **Board Control**: 🆕 E-Ink controller reset and power cycling (v2.2.0+)
 - **NFC Interface**: NTA5332 controller status and field detection
 - **Automation**: Script-friendly output formats and batch operations
+
+## What's New in v0.2.0
+
+- **🔄 Board Reset Command**: Power cycle the E-Ink controller board with `board reset`
+- **📊 Enhanced Version Display**: Support for semantic versioning with build metadata (e.g., `2.2.0+292.0a0d038-dirty`)
+- **🔧 Improved GPIO Commands**: Enhanced `gpio get` and `gpio set` functionality
+- **⚡ Better Power Control**: Refined power management commands for all rails
+- **🚀 Full Command Framework**: Complete implementation of all planned CLI commands
 
 ## Quick Start
 
@@ -48,6 +59,13 @@ eink-power-cli battery read
 # Control power rails
 eink-power-cli power pmic on
 eink-power-cli power wifi off
+
+# Reset the E-Ink controller board (NEW in v2.2.0+)
+eink-power-cli board reset
+
+# Control GPIO pins
+eink-power-cli gpio get gpioa 5
+eink-power-cli gpio set gpiob 3 1
 
 # Get system information
 eink-power-cli system info
