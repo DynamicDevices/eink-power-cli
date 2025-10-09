@@ -18,7 +18,8 @@ use std::env;
 async fn test_connection() {
     let device = env::var("TEST_DEVICE").unwrap_or_else(|_| "/dev/ttyUSB0".to_string());
 
-    let mut connection = Connection::new(&device, 115200, false).expect("Failed to create connection");
+    let mut connection =
+        Connection::new(&device, 115200, false).expect("Failed to create connection");
 
     // This should succeed if hardware is connected
     let result = connection.connect().await;
