@@ -5,8 +5,9 @@
  */
 
 use crate::error::{PowerCliError, Result};
-use log::{debug, info, warn};
+use log::{debug, info};
 use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::timeout;
 use tokio_serial::{SerialPortBuilderExt, SerialStream};
 
@@ -16,16 +17,18 @@ pub struct Connection {
     baud_rate: u32,
     timeout_duration: Duration,
     stream: Option<SerialStream>,
+    quiet: bool,
 }
 
 impl Connection {
     /// Create a new connection instance
-    pub fn new(device_path: &str, baud_rate: u32) -> Result<Self> {
+    pub fn new(device_path: &str, baud_rate: u32, quiet: bool) -> Result<Self> {
         Ok(Self {
             device_path: device_path.to_string(),
             baud_rate,
             timeout_duration: Duration::from_secs(3),
             stream: None,
+            quiet,
         })
     }
 
@@ -36,10 +39,15 @@ impl Connection {
 
     /// Connect to the serial device
     pub async fn connect(&mut self) -> Result<()> {
-        info!(
+        debug!(
             "Connecting to {} at {} baud",
             self.device_path, self.baud_rate
         );
+
+        // Log port usage at info level unless quiet mode is enabled
+        if !self.quiet {
+            info!("Using serial port: {} at {} baud", self.device_path, self.baud_rate);
+        }
 
         // Check if device exists
         if !std::path::Path::new(&self.device_path).exists() {
@@ -57,41 +65,56 @@ impl Connection {
             .open_native_async()?;
 
         self.stream = Some(stream);
-        info!("Successfully connected to {}", self.device_path);
-
-        // Test connection with a ping
-        self.test_connection().await?;
-
-        Ok(())
-    }
-
-    /// Test the connection by sending a ping command
-    async fn test_connection(&mut self) -> Result<()> {
-        debug!("Testing connection with ping command");
-
-        // TODO: Implement actual ping command
-        // For now, just verify the stream is available
-        if self.stream.is_none() {
-            return Err(PowerCliError::NotConnected);
-        }
+        debug!("Successfully connected to {}", self.device_path);
 
         Ok(())
     }
 
     /// Send a command and wait for response
     pub async fn send_command(&mut self, command: &str) -> Result<String> {
+        // Auto-connect if not already connected
         if self.stream.is_none() {
-            return Err(PowerCliError::NotConnected);
+            debug!("Auto-connecting to device before sending command");
+            self.connect().await?;
         }
 
+        let stream = self.stream.as_mut().unwrap();
         debug!("Sending command: {}", command);
 
-        // TODO: Implement actual command sending
-        // This is a placeholder implementation
+        // Send command with newline
+        let command_with_newline = format!("{}\n", command);
+        stream.write_all(command_with_newline.as_bytes()).await?;
+        stream.flush().await?;
+
+        // Read response with timeout
         let response = timeout(self.timeout_duration, async {
-            // Simulate command execution
-            tokio::time::sleep(Duration::from_millis(100)).await;
-            Ok::<String, PowerCliError>(format!("Response to: {}", command))
+            let mut buffer = Vec::new();
+            let mut temp_buf = [0u8; 1024];
+            
+            loop {
+                match stream.read(&mut temp_buf).await {
+                    Ok(0) => break, // EOF
+                    Ok(n) => {
+                        buffer.extend_from_slice(&temp_buf[..n]);
+                        let response_str = String::from_utf8_lossy(&buffer);
+                        
+                        // Look for shell prompt indicating end of response
+                        if response_str.contains("prod:~$") || response_str.contains("debug:~$") {
+                            break;
+                        }
+                        
+                        // Also break on timeout if we have some data
+                        if buffer.len() > 0 && response_str.trim().len() > 0 {
+                            // Give a small additional delay for any remaining data
+                            tokio::time::sleep(Duration::from_millis(100)).await;
+                            break;
+                        }
+                    }
+                    Err(e) => return Err(PowerCliError::Io(e)),
+                }
+            }
+            
+            Ok(String::from_utf8_lossy(&buffer).to_string())
         })
         .await
         .map_err(|_| PowerCliError::Timeout {
@@ -99,7 +122,31 @@ impl Connection {
         })??;
 
         debug!("Received response: {}", response);
-        Ok(response)
+        
+        // Clean up the response by removing the command echo and prompt
+        let cleaned_response = self.clean_response(&response, command);
+        Ok(cleaned_response)
+    }
+
+    /// Clean up the response by removing command echo and shell prompt
+    fn clean_response(&self, response: &str, command: &str) -> String {
+        let mut lines: Vec<&str> = response.lines().collect();
+        
+        // Remove command echo (usually the first line)
+        if !lines.is_empty() && lines[0].trim() == command.trim() {
+            lines.remove(0);
+        }
+        
+        // Remove shell prompt (usually the last line)
+        if !lines.is_empty() {
+            let last_line = lines[lines.len() - 1].trim();
+            if last_line.contains("prod:~$") || last_line.contains("debug:~$") {
+                lines.pop();
+            }
+        }
+        
+        // Join remaining lines and trim
+        lines.join("\n").trim().to_string()
     }
 
     /// Check if connection is active
@@ -110,7 +157,7 @@ impl Connection {
     /// Disconnect from the serial device
     pub async fn disconnect(&mut self) {
         if let Some(_stream) = self.stream.take() {
-            info!("Disconnected from {}", self.device_path);
+            debug!("Disconnected from {}", self.device_path);
         }
     }
 }
@@ -118,7 +165,7 @@ impl Connection {
 impl Drop for Connection {
     fn drop(&mut self) {
         if self.stream.is_some() {
-            warn!("Connection dropped without explicit disconnection");
+            debug!("Connection automatically closed on drop");
         }
     }
 }

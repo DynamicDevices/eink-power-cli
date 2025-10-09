@@ -12,7 +12,7 @@
  */
 
 use clap::Parser;
-use log::{error, info};
+use log::{debug, error};
 use std::process;
 
 mod cli;
@@ -31,13 +31,19 @@ const APP_NAME: &str = env!("CARGO_PKG_NAME");
 
 #[tokio::main]
 async fn main() {
-    // Initialize logging
-    env_logger::Builder::from_default_env()
-        .filter_level(log::LevelFilter::Info)
-        .init();
-
-    // Parse command line arguments
+    // Parse command line arguments first to get verbose flag
     let cli = Cli::parse();
+
+    // Initialize logging based on verbose flag
+    let log_level = if cli.verbose {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Warn
+    };
+
+    env_logger::Builder::from_default_env()
+        .filter_level(log_level)
+        .init();
 
     // Print version header
     if !cli.quiet {
@@ -60,15 +66,15 @@ async fn main() {
 
 /// Main application logic
 async fn run(cli: Cli) -> Result<(), PowerCliError> {
-    info!("Starting eink-power-cli v{}", VERSION);
+    debug!("Starting eink-power-cli v{}", VERSION);
 
     // Create serial connection
-    let connection = serial::Connection::new(&cli.device, cli.baud)?;
+    let connection = serial::Connection::new(&cli.device, cli.baud, cli.quiet)?;
     let mut power_controller = power::control::PowerController::new(connection);
 
     match cli.command {
         Some(ref cmd) => {
-            info!("Executing command: {:?}", cmd);
+            debug!("Executing command: {:?}", cmd);
             execute_command(cmd.clone(), &mut power_controller, &cli).await?;
             Ok(())
         }

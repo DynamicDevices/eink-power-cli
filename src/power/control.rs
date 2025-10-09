@@ -77,8 +77,8 @@ impl PowerController {
 
     /// Ping the controller
     pub async fn ping(&mut self) -> Result<String> {
-        info!("Pinging controller");
-        self.protocol.execute_system_command("version").await
+        debug!("Pinging controller");
+        self.protocol.execute_system_command("ping").await
     }
 
     /// Control GPIO pin
