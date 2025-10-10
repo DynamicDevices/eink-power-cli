@@ -1,9 +1,9 @@
 [package]
 name = "eink-power-cli"
-version = "2.4.0"
+version = "2.5.0"
 edition = "2021"
 license = "Commercial"
-description = "Command-line interface for E-ink power controller communication (PMU firmware v2.4.0+)"
+description = "Command-line interface for E-ink power controller communication (PMU firmware v2.5.0+)"
 homepage = "https://github.com/DynamicDevices/eink-power-cli"
 repository = "https://github.com/DynamicDevices/eink-power-cli"
 documentation = "https://github.com/DynamicDevices/eink-power-cli/blob/main/README.md"
