@@ -97,7 +97,9 @@ impl Protocol {
 
         // Special handling for reset and shutdown commands - they will cause connection loss
         if command == "reset" || command == "shutdown" {
-            return self.execute_board_power_command(&full_command, command).await;
+            return self
+                .execute_board_power_command(&full_command, command)
+                .await;
         }
 
         let response = self.connection.send_command(&full_command).await?;
@@ -121,8 +123,7 @@ impl Protocol {
                     .to_string(),
             ),
             "shutdown" => Ok(
-                "Board shutdown sequence initiated. System will power off permanently."
-                    .to_string(),
+                "Board shutdown sequence initiated. System will power off permanently.".to_string(),
             ),
             _ => Ok(format!("Board {} command executed", action)),
         }
