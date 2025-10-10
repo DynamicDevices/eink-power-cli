@@ -106,10 +106,11 @@ impl PowerController {
 
     /// Execute board control command
     pub async fn control_board(&mut self, action: BoardAction) -> Result<String> {
-        info!("Executing board action: {:?}", action);
+        debug!("Executing board action: {:?}", action);
 
         match action {
             BoardAction::Reset => self.protocol.execute_board_command("reset").await,
+            BoardAction::Shutdown => self.protocol.execute_board_command("shutdown").await,
         }
     }
 
@@ -221,6 +222,7 @@ pub enum GpioAction {
 #[derive(Debug, Clone)]
 pub enum BoardAction {
     Reset,
+    Shutdown,
 }
 
 /// Power management statistics

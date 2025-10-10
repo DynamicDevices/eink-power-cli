@@ -245,6 +245,8 @@ pub enum PowerManagementCommands {
 pub enum BoardCommands {
     /// Reset the E-Ink controller board (power cycle)
     Reset,
+    /// Shutdown the E-Ink controller board (permanent power off)
+    Shutdown,
 }
 
 /// LTC2959 coulomb counter commands

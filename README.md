@@ -66,6 +66,9 @@ eink-power-cli power wifi off
 # Reset the E-Ink controller board (NEW in v2.2.0+)
 eink-power-cli board reset
 
+# Shutdown the E-Ink controller board (NEW in v2.3.0+)
+eink-power-cli board shutdown
+
 # Control GPIO pins
 eink-power-cli gpio get gpioa 5
 eink-power-cli gpio set gpiob 3 1

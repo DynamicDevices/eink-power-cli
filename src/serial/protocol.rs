@@ -95,30 +95,37 @@ impl Protocol {
         let full_command = format!("board {}", command);
         debug!("Executing board command: {}", full_command);
 
-        // Special handling for reset command - it will cause connection loss
-        if command == "reset" {
-            return self.execute_board_reset_command(&full_command).await;
+        // Special handling for reset and shutdown commands - they will cause connection loss
+        if command == "reset" || command == "shutdown" {
+            return self.execute_board_power_command(&full_command, command).await;
         }
 
         let response = self.connection.send_command(&full_command).await?;
         self.parse_response(&response)
     }
 
-    /// Execute board reset command with special handling for connection loss
-    async fn execute_board_reset_command(&mut self, command: &str) -> Result<String> {
-        debug!("Executing board reset command with short timeout");
+    /// Execute board power command (reset/shutdown) with special handling for connection loss
+    async fn execute_board_power_command(&mut self, command: &str, action: &str) -> Result<String> {
+        debug!("Executing board {} command with short timeout", action);
 
-        // Send the command but don't wait for a full response since the board will reset
+        // Send the command but don't wait for a full response since the board will power off
         let _response = self
             .connection
             .send_command_with_short_timeout(command)
             .await?;
 
-        // Return a success message regardless of response since reset will cut connection
-        Ok(
-            "Board reset sequence initiated. Connection will be lost during power cycle."
-                .to_string(),
-        )
+        // Return appropriate success message based on action
+        match action {
+            "reset" => Ok(
+                "Board reset sequence initiated. Connection will be lost during power cycle."
+                    .to_string(),
+            ),
+            "shutdown" => Ok(
+                "Board shutdown sequence initiated. System will power off permanently."
+                    .to_string(),
+            ),
+            _ => Ok(format!("Board {} command executed", action)),
+        }
     }
 
     /// Execute an LTC2959 coulomb counter command

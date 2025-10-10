@@ -187,6 +187,15 @@ async fn execute_command(
                         println!("{}", response);
                     }
                 }
+                BoardCommands::Shutdown => {
+                    let response = controller
+                        .control_board(power::control::BoardAction::Shutdown)
+                        .await?;
+                    if !cli.quiet {
+                        println!("🔌 Board shutdown initiated:");
+                        println!("{}", response);
+                    }
+                }
             }
         }
         Commands::Ltc2959(ltc2959_cmd) => {
