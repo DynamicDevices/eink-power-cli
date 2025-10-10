@@ -20,7 +20,7 @@ The E-ink Power CLI is a Rust-based command-line tool designed to communicate wi
 - **Battery Monitoring**: Real-time LTC2959 coulomb counter readings
 - **System Control**: GPIO manipulation, system information, and diagnostics
 - **🆕 Firmware Management**: Upload firmware via mcumgr with progress indication (v2.3.0)
-- **Board Control**: E-Ink controller reset and power cycling
+- **Board Control**: E-Ink controller reset and shutdown (WiFi+Display+PMIC)
 - **Automation**: JSON/CSV output formats and batch operations
 
 ## What's New in v2.3.0
@@ -29,10 +29,9 @@ The E-ink Power CLI is a Rust-based command-line tool designed to communicate wi
 - **📊 Progress Indication**: Real-time upload progress and boot countdown
 - **🔄 Automated Process**: Reset → Upload → Reboot → Verify in one command
 - **📋 Firmware Info**: List installed images and bootloader status
-- **🔧 Improved GPIO Commands**: Enhanced `gpio get` and `gpio set` functionality
-- **⚡ Better Power Control**: Refined power management commands for all rails
-- **🚀 Full Command Framework**: Complete implementation of all planned CLI commands
-- **🎯 Version Alignment**: CLI version now matches PMU firmware version for clarity
+- **🔌 Board Shutdown**: Complete power-off (WiFi+Display+PMIC) for maintenance
+- **🔧 Enhanced GPIO**: Improved `gpio get` and `gpio set` functionality
+- **🎯 Version Alignment**: CLI version matches PMU firmware version for clarity
 
 ## Quick Start
 
@@ -67,7 +66,7 @@ eink-power-cli power wifi off
 eink-power-cli board reset
 
 # Shutdown the E-Ink controller board (NEW in v2.3.0+)
-eink-power-cli board shutdown
+eink-power-cli board shutdown  # WiFi+Display+PMIC power off
 
 # Control GPIO pins
 eink-power-cli gpio get gpioa 5
