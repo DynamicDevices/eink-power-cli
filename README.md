@@ -32,6 +32,7 @@ The E-ink Power CLI is a Rust-based command-line tool designed to communicate wi
 - **🔌 Board Shutdown**: Complete power-off (WiFi+Display+PMIC) for maintenance
 - **🔧 Enhanced GPIO**: Improved `gpio get` and `gpio set` functionality
 - **🎯 Version Alignment**: CLI version matches PMU firmware version for clarity
+- **📋 MCXC144VFM Programming**: Use `target_scripts/program_mcxc144.sh` for reliable firmware updates
 
 ## Quick Start
 
