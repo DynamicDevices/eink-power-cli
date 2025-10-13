@@ -304,7 +304,7 @@ ssh -p 23 ajlennon@62.3.79.162 "eink-power-cli battery read --format json"
 ### 2. Automation Script Compatibility:
 ```bash
 # Replace existing Python scripts
-# OLD: python3 target_scripts/test_target_board_single.py "ltc2959 read"
+# OLD: python3 scripts/testing/test_target_board_single.py "ltc2959 read"
 # NEW: eink-power-cli battery read
 
 # Batch operations
