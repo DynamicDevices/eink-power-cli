@@ -148,8 +148,9 @@ impl Connection {
         stream.write_all(command_with_newline.as_bytes()).await?;
         stream.flush().await?;
 
-        // Use a very short timeout (500ms) for commands that may cause connection loss
-        let short_timeout = Duration::from_millis(500);
+        // Use a longer timeout (2000ms) for commands that may cause connection loss
+        // This gives the board enough time to complete shutdown sequence before connection is lost
+        let short_timeout = Duration::from_millis(2000);
         let response = timeout(short_timeout, async {
             let mut buffer = Vec::new();
             let mut temp_buf = [0u8; 1024];
