@@ -24,12 +24,14 @@ The E-ink Power CLI is a Rust-based command-line tool designed to communicate wi
 - **Board Control**: E-Ink controller reset and shutdown (WiFi+Display+PMIC)
 - **Automation**: JSON/CSV output formats and batch operations
 
-## What's New in v2.4.0
+## What's New in v2.5.0
 
 - **🕐 RTC Management**: External PCF2131 RTC interrupt configuration and monitoring
 - **⚙️ Auto-Power Mode**: Configure PMU to auto-power i.MX93 when PMIC is off
 - **📊 Interrupt Tracking**: Monitor external RTC interrupt events and statistics
 - **🔧 Runtime Configuration**: Change RTC interrupt actions without firmware updates
+- **🏗️ MCXC144VFM Focus**: Optimized for MCXC144VFM hardware platform (256KB flash)
+- **🔧 Board Control**: Enhanced board shutdown and reset functionality
 
 ## Previous Release - v2.3.0
 
