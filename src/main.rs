@@ -131,6 +131,10 @@ fn output_response(
                         json::ResponseParser::parse_gpio_response(response, "unknown", 0);
                     serde_json::to_value(gpio_data)?
                 }
+                cmd if cmd.contains("rtc") => {
+                    let rtc_data = json::ResponseParser::parse_rtc_status(response);
+                    serde_json::to_value(rtc_data)?
+                }
                 _ => {
                     // Generic response - just wrap the raw text
                     serde_json::json!({
@@ -471,6 +475,28 @@ async fn execute_command(
                         println!("📡 NFC Field Detection:");
                         println!("{}", response);
                     }
+                }
+            }
+        }
+        Commands::Rtc(rtc_cmd) => {
+            use cli::{RtcCommands, ExternalRtcAction};
+            match rtc_cmd {
+                RtcCommands::Status => {
+                    let response = controller.rtc_status().await?;
+                    output_response(cli, "rtc status", &response, "🕐", "RTC Status")?;
+                }
+                RtcCommands::Config { action } => {
+                    let action_str = match action {
+                        ExternalRtcAction::None => "none",
+                        ExternalRtcAction::Wake => "wake",
+                        ExternalRtcAction::Auto => "auto",
+                    };
+                    let response = controller.rtc_config(action_str).await?;
+                    output_response(cli, "rtc config", &response, "⚙️", "RTC Configuration")?;
+                }
+                RtcCommands::Show => {
+                    let response = controller.rtc_show_config().await?;
+                    output_response(cli, "rtc show", &response, "📋", "RTC Configuration")?;
                 }
             }
         }

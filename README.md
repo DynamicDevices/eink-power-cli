@@ -19,11 +19,19 @@ The E-ink Power CLI is a Rust-based command-line tool designed to communicate wi
 - **Power Management**: Control PMIC, WiFi, and display power rails
 - **Battery Monitoring**: Real-time LTC2959 coulomb counter readings
 - **System Control**: GPIO manipulation, system information, and diagnostics
+- **🆕 RTC Management**: External PCF2131 RTC interrupt configuration (v2.4.0+)
 - **🆕 Firmware Management**: Upload firmware via mcumgr with progress indication (v2.3.0)
 - **Board Control**: E-Ink controller reset and shutdown (WiFi+Display+PMIC)
 - **Automation**: JSON/CSV output formats and batch operations
 
-## What's New in v2.3.0
+## What's New in v2.4.0
+
+- **🕐 RTC Management**: External PCF2131 RTC interrupt configuration and monitoring
+- **⚙️ Auto-Power Mode**: Configure PMU to auto-power i.MX93 when PMIC is off
+- **📊 Interrupt Tracking**: Monitor external RTC interrupt events and statistics
+- **🔧 Runtime Configuration**: Change RTC interrupt actions without firmware updates
+
+## Previous Release - v2.3.0
 
 - **🚀 Firmware Management**: Complete firmware upload with mcumgr integration
 - **📊 Progress Indication**: Real-time upload progress and boot countdown
@@ -72,6 +80,13 @@ eink-power-cli board shutdown  # WiFi+Display+PMIC power off
 # Control GPIO pins
 eink-power-cli gpio get gpioa 5
 eink-power-cli gpio set gpiob 3 1
+
+# RTC management (NEW in v2.4.0+)
+eink-power-cli rtc status              # Show RTC status and interrupt events
+eink-power-cli rtc config auto         # Auto-power i.MX93 if PMIC is off
+eink-power-cli rtc config wake         # Always wake i.MX93 on interrupt
+eink-power-cli rtc config none         # Just log interrupt events
+eink-power-cli rtc show               # Show current configuration
 
 # Get system information
 eink-power-cli system info
@@ -143,6 +158,15 @@ eink-power-cli gpio set <port> <pin> <val> # Set GPIO state
 eink-power-cli nfc status                 # NFC controller status
 eink-power-cli nfc info                   # Device information
 eink-power-cli nfc field-detect           # Check field detection
+```
+
+### RTC Management (v2.4.0+)
+```bash
+eink-power-cli rtc status                 # Show RTC status and interrupt events
+eink-power-cli rtc config none            # No action - just log events
+eink-power-cli rtc config wake            # Always wake i.MX93 on interrupt
+eink-power-cli rtc config auto            # Auto-power i.MX93 if PMIC is off
+eink-power-cli rtc show                   # Show current configuration
 ```
 
 ## Configuration

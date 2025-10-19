@@ -100,6 +100,10 @@ pub enum Commands {
     #[command(subcommand)]
     Pm(PowerManagementCommands),
 
+    /// RTC (Real-Time Clock) commands
+    #[command(subcommand)]
+    Rtc(RtcCommands),
+
     /// Firmware management commands
     #[command(subcommand)]
     Firmware(FirmwareCommands),
@@ -313,4 +317,30 @@ pub enum PowerState {
 pub enum MonitorAction {
     Start,
     Stop,
+}
+
+/// RTC (Real-Time Clock) commands
+#[derive(Subcommand, Debug, Clone)]
+pub enum RtcCommands {
+    /// Show RTC status (internal + external PCF2131)
+    Status,
+    /// Configure external RTC interrupt action
+    Config {
+        /// External RTC interrupt action
+        #[arg(value_enum)]
+        action: ExternalRtcAction,
+    },
+    /// Show external RTC interrupt configuration
+    Show,
+}
+
+/// External RTC interrupt actions
+#[derive(ValueEnum, Clone, Debug)]
+pub enum ExternalRtcAction {
+    /// No action - just log the event
+    None,
+    /// Always wake i.MX93 when interrupt occurs
+    Wake,
+    /// Auto-power i.MX93 if PMIC is currently off
+    Auto,
 }

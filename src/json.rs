@@ -94,6 +94,33 @@ pub struct GpioJson {
     pub state: Option<String>,
 }
 
+/// RTC status information in JSON format
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RtcStatusJson {
+    pub internal_rtc: InternalRtcJson,
+    pub external_rtc: ExternalRtcJson,
+    pub last_wake_source: Option<String>,
+}
+
+/// Internal RTC information
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InternalRtcJson {
+    pub wake_events: Option<u32>,
+    pub status: Option<String>,
+    pub function: Option<String>,
+}
+
+/// External RTC (PCF2131) information
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExternalRtcJson {
+    pub interrupt_events: Option<u32>,
+    pub status: Option<String>,
+    pub connection: Option<String>,
+    pub i2c_address: Option<String>,
+    pub function: Option<String>,
+    pub interrupt_action: Option<String>,
+}
+
 /// NFC status for JSON output
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NfcJson {
@@ -370,5 +397,59 @@ impl ResponseParser {
         }
 
         gpio
+    }
+
+    /// Parse RTC status response into JSON
+    pub fn parse_rtc_status(response: &str) -> RtcStatusJson {
+        let mut rtc = RtcStatusJson {
+            internal_rtc: InternalRtcJson {
+                wake_events: None,
+                status: None,
+                function: Some("Periodic maintenance and battery monitoring".to_string()),
+            },
+            external_rtc: ExternalRtcJson {
+                interrupt_events: None,
+                status: None,
+                connection: Some("INTB# → PTC5 (LLWU_P9) - Active LOW".to_string()),
+                i2c_address: Some("0x53".to_string()),
+                function: Some("Alarms, timers, watchdog, timestamps".to_string()),
+                interrupt_action: None,
+            },
+            last_wake_source: None,
+        };
+
+        // Parse internal RTC wake events
+        if let Some(caps) = regex::Regex::new(r"Internal RTC.*?Wake events:\s*(\d+)")
+            .unwrap()
+            .captures(response)
+        {
+            rtc.internal_rtc.wake_events = Some(caps[1].parse().unwrap_or(0));
+        }
+
+        // Parse external RTC interrupt events
+        if let Some(caps) = regex::Regex::new(r"External RTC.*?Interrupt events:\s*(\d+)")
+            .unwrap()
+            .captures(response)
+        {
+            rtc.external_rtc.interrupt_events = Some(caps[1].parse().unwrap_or(0));
+        }
+
+        // Parse interrupt action
+        if let Some(caps) = regex::Regex::new(r"Interrupt Action:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
+            rtc.external_rtc.interrupt_action = Some(caps[1].trim().to_string());
+        }
+
+        // Parse last wake source
+        if let Some(caps) = regex::Regex::new(r"Last Wake Source:\s*(.+)")
+            .unwrap()
+            .captures(response)
+        {
+            rtc.last_wake_source = Some(caps[1].trim().to_string());
+        }
+
+        rtc
     }
 }

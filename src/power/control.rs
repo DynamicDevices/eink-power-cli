@@ -185,6 +185,24 @@ impl PowerController {
         self.protocol.execute_nfc_command(cmd).await
     }
 
+    /// Get RTC status (internal + external PCF2131)
+    pub async fn rtc_status(&mut self) -> Result<String> {
+        info!("Getting RTC status");
+        self.protocol.execute_power_command("rtc", "").await
+    }
+
+    /// Configure external RTC interrupt action
+    pub async fn rtc_config(&mut self, action: &str) -> Result<String> {
+        info!("Configuring external RTC action: {}", action);
+        self.protocol.execute_power_command("rtc_config", action).await
+    }
+
+    /// Show external RTC interrupt configuration
+    pub async fn rtc_show_config(&mut self) -> Result<String> {
+        info!("Getting external RTC configuration");
+        self.protocol.execute_power_command("rtc_config", "status").await
+    }
+
     /// Parse power statistics response
     fn parse_power_stats(&self, response: &str) -> Result<PowerStats> {
         debug!("Parsing power stats: {}", response);
