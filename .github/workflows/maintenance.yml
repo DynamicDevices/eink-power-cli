@@ -49,8 +49,9 @@ jobs:
 
     - name: Install cargo-edit and cargo-outdated
       run: |
-        # Install latest versions compatible with Rust 1.83
-        cargo install cargo-edit cargo-outdated
+        # Install specific versions compatible with Rust 1.83 (avoid edition2024 requirement)
+        cargo install cargo-edit --version "0.12.3"
+        cargo install cargo-outdated --version "0.15.0"
 
     - name: Check for outdated dependencies
       run: |
@@ -188,8 +189,9 @@ jobs:
 
     - name: Install quality tools
       run: |
-        # Install latest versions compatible with Rust 1.83
-        cargo install cargo-bloat cargo-outdated
+        # Install specific versions compatible with Rust 1.83 (avoid edition2024 requirement)
+        cargo install cargo-bloat --version "0.12.1"
+        cargo install cargo-outdated --version "0.15.0"
 
     - name: Generate code metrics
       run: |
