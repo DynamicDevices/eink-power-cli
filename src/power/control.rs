@@ -194,13 +194,17 @@ impl PowerController {
     /// Configure external RTC interrupt action
     pub async fn rtc_config(&mut self, action: &str) -> Result<String> {
         info!("Configuring external RTC action: {}", action);
-        self.protocol.execute_power_command("rtc_config", action).await
+        self.protocol
+            .execute_power_command("rtc_config", action)
+            .await
     }
 
     /// Show external RTC interrupt configuration
     pub async fn rtc_show_config(&mut self) -> Result<String> {
         info!("Getting external RTC configuration");
-        self.protocol.execute_power_command("rtc_config", "status").await
+        self.protocol
+            .execute_power_command("rtc_config", "status")
+            .await
     }
 
     /// Parse power statistics response

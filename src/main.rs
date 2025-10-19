@@ -479,7 +479,7 @@ async fn execute_command(
             }
         }
         Commands::Rtc(rtc_cmd) => {
-            use cli::{RtcCommands, ExternalRtcAction};
+            use cli::{ExternalRtcAction, RtcCommands};
             match rtc_cmd {
                 RtcCommands::Status => {
                     let response = controller.rtc_status().await?;
