@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event.inputs.update_dependencies == 'true'
     container:
-      image: rust:1.81-bullseye
+      image: rust:1.83-bullseye
       options: --user root
 
     steps:
@@ -49,6 +49,7 @@ jobs:
 
     - name: Install cargo-edit and cargo-outdated
       run: |
+        # Install latest versions compatible with Rust 1.83
         cargo install cargo-edit cargo-outdated
 
     - name: Check for outdated dependencies
@@ -109,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event.inputs.security_audit == 'true'
     container:
-      image: rust:1.81-bullseye
+      image: rust:1.83-bullseye
 
     steps:
     - name: Checkout code
@@ -168,7 +169,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
     container:
-      image: rust:1.81-bullseye
+      image: rust:1.83-bullseye
 
     steps:
     - name: Checkout code
@@ -187,6 +188,7 @@ jobs:
 
     - name: Install quality tools
       run: |
+        # Install latest versions compatible with Rust 1.83
         cargo install cargo-bloat cargo-outdated
 
     - name: Generate code metrics

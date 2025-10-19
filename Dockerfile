@@ -2,7 +2,7 @@
 # This Dockerfile provides a consistent development environment
 # for building and testing the eink-power-cli application
 
-FROM rust:1.81-bullseye
+FROM rust:1.83-bullseye
 
 # Metadata
 LABEL maintainer="Alex J Lennon <ajlennon@dynamicdevices.co.uk>"
