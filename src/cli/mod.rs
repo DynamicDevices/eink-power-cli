@@ -208,6 +208,11 @@ pub enum PowerManagementCommands {
         /// Sleep timeout in milliseconds
         timeout: Option<u32>,
     },
+    /// Enter deep sleep with all peripherals OFF (PMIC, WiFi, Display)
+    DeepSleepAllOff {
+        /// Sleep timeout in milliseconds
+        timeout: Option<u32>,
+    },
     /// Start/stop monitoring
     Monitor {
         /// Action to perform

@@ -7,6 +7,7 @@
 use crate::error::{PowerCliError, Result};
 use log::{debug, info, warn};
 use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::timeout;
 use tokio_serial::{SerialPortBuilderExt, SerialStream};
 
@@ -69,36 +70,124 @@ impl Connection {
     async fn test_connection(&mut self) -> Result<()> {
         debug!("Testing connection with ping command");
 
-        // TODO: Implement actual ping command
-        // For now, just verify the stream is available
+        // Just verify the stream is available
         if self.stream.is_none() {
             return Err(PowerCliError::NotConnected);
         }
 
+        // Send a ping command and wait for response
+        // This helps verify the firmware is responding
+        let _response = self.send_command("ping").await?;
         Ok(())
     }
 
     /// Send a command and wait for response
     pub async fn send_command(&mut self, command: &str) -> Result<String> {
-        if self.stream.is_none() {
-            return Err(PowerCliError::NotConnected);
-        }
+        let stream = self.stream.as_mut().ok_or(PowerCliError::NotConnected)?;
+        let timeout_duration = self.timeout_duration;
 
         debug!("Sending command: {}", command);
 
-        // TODO: Implement actual command sending
-        // This is a placeholder implementation
-        let response = timeout(self.timeout_duration, async {
-            // Simulate command execution
-            tokio::time::sleep(Duration::from_millis(100)).await;
-            Ok::<String, PowerCliError>(format!("Response to: {}", command))
+        // Clear any pending input
+        let _ = Self::read_available_static(stream, Duration::from_millis(100)).await;
+
+        // Send command with newline
+        let cmd_bytes = format!("{}\n", command);
+        stream
+            .write_all(cmd_bytes.as_bytes())
+            .await
+            .map_err(|e| PowerCliError::Io(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Failed to write to serial port: {}", e),
+            )))?;
+
+        // Flush to ensure command is sent
+        stream
+            .flush()
+            .await
+            .map_err(|e| PowerCliError::Io(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Failed to flush serial port: {}", e),
+            )))?;
+
+        // Read response with timeout
+        let response = timeout(timeout_duration, async {
+            Self::read_response_static(stream).await
         })
         .await
         .map_err(|_| PowerCliError::Timeout {
-            timeout: self.timeout_duration.as_secs(),
+            timeout: timeout_duration.as_secs(),
         })??;
 
-        debug!("Received response: {}", response);
+        debug!("Received response ({} bytes)", response.len());
+        Ok(response)
+    }
+
+    /// Read available data from serial port (non-blocking)
+    async fn read_available_static(stream: &mut SerialStream, max_duration: Duration) -> String {
+        let mut buffer = vec![0u8; 4096];
+        let mut result = String::new();
+        let start = std::time::Instant::now();
+
+        while start.elapsed() < max_duration {
+            match tokio::time::timeout(Duration::from_millis(50), stream.read(&mut buffer)).await {
+                Ok(Ok(0)) => break, // EOF
+                Ok(Ok(n)) => {
+                    if let Ok(text) = String::from_utf8(buffer[..n].to_vec()) {
+                        result.push_str(&text);
+                    }
+                }
+                Ok(Err(_)) => break, // Error reading
+                Err(_) => break,     // Timeout - no more data
+            }
+        }
+
+        result
+    }
+
+    /// Read response from serial port until prompt or timeout
+    async fn read_response_static(stream: &mut SerialStream) -> Result<String> {
+        let mut response = String::new();
+        let mut buffer = vec![0u8; 1024];
+        let mut last_activity = std::time::Instant::now();
+        let max_idle_time = Duration::from_millis(500); // 500ms idle = end of response
+
+        loop {
+            match tokio::time::timeout(Duration::from_millis(100), stream.read(&mut buffer)).await {
+                Ok(Ok(0)) => break, // EOF
+                Ok(Ok(n)) => {
+                    if let Ok(text) = String::from_utf8(buffer[..n].to_vec()) {
+                        response.push_str(&text);
+                        last_activity = std::time::Instant::now();
+                        
+                        // Check for shell prompt (indicates command completed)
+                        if response.contains(":~$") || response.contains("uart:") {
+                            // Small delay to ensure all output is captured
+                            tokio::time::sleep(Duration::from_millis(100)).await;
+                            // Read any remaining data
+                            let remaining = Self::read_available_static(stream, Duration::from_millis(200)).await;
+                            if !remaining.is_empty() {
+                                response.push_str(&remaining);
+                            }
+                            break;
+                        }
+                    }
+                }
+                Ok(Err(e)) => {
+                    return Err(PowerCliError::Io(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!("Serial read error: {}", e),
+                    )));
+                }
+                Err(_) => {
+                    // Timeout - check if we've been idle too long
+                    if last_activity.elapsed() > max_idle_time {
+                        break;
+                    }
+                }
+            }
+        }
+
         Ok(response)
     }
 

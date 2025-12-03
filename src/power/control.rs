@@ -4,6 +4,7 @@
  * All rights reserved.
  */
 
+use crate::cli;
 use crate::error::Result;
 use crate::serial::{Connection, Protocol};
 use log::{debug, info};
@@ -11,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 /// Power controller interface
 pub struct PowerController {
-    protocol: Protocol,
+    pub protocol: Protocol,
 }
 
 impl PowerController {
@@ -69,6 +70,19 @@ impl PowerController {
         self.parse_power_stats(&response)
     }
 
+    /// Enter deep sleep with all peripherals OFF (PMIC, WiFi, Display)
+    pub async fn deep_sleep_all_off(&mut self, timeout_ms: Option<u32>) -> Result<String> {
+        info!("Entering deep sleep with all peripherals OFF (timeout: {:?} ms)", timeout_ms);
+
+        let command = if let Some(timeout) = timeout_ms {
+            format!("pm deep_sleep_all_off {}", timeout)
+        } else {
+            "pm deep_sleep_all_off".to_string()
+        };
+
+        self.protocol.execute_system_command(&command).await
+    }
+
     /// Control GPIO pin
     pub async fn control_gpio(
         &mut self,
@@ -116,6 +130,16 @@ pub enum PowerState {
     On,
     Off,
     Status,
+}
+
+impl From<cli::PowerState> for PowerState {
+    fn from(state: cli::PowerState) -> Self {
+        match state {
+            cli::PowerState::On => PowerState::On,
+            cli::PowerState::Off => PowerState::Off,
+            cli::PowerState::Status => PowerState::Status,
+        }
+    }
 }
 
 /// GPIO actions

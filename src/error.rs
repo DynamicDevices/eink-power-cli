@@ -16,6 +16,10 @@ pub enum PowerCliError {
     /// Tokio serial errors
     #[error("Async serial error: {0}")]
     TokioSerial(String),
+    
+    /// Serial port already open
+    #[error("Serial port already open")]
+    AlreadyOpen,
 
     /// I/O errors
     #[error("I/O error: {0}")]
