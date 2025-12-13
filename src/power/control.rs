@@ -188,22 +188,52 @@ impl PowerController {
     /// Get RTC status (internal + external PCF2131)
     pub async fn rtc_status(&mut self) -> Result<String> {
         info!("Getting RTC status");
-        self.protocol.execute_power_command("rtc", "").await
+        self.protocol.execute_system_command("rtc status").await
     }
 
     /// Configure external RTC interrupt action
     pub async fn rtc_config(&mut self, action: &str) -> Result<String> {
         info!("Configuring external RTC action: {}", action);
         self.protocol
-            .execute_power_command("rtc_config", action)
+            .execute_system_command(&format!("rtc config {}", action))
             .await
     }
 
     /// Show external RTC interrupt configuration
     pub async fn rtc_show_config(&mut self) -> Result<String> {
         info!("Getting external RTC configuration");
+        self.protocol.execute_system_command("rtc show").await
+    }
+
+    /// Execute RTC command
+    pub async fn execute_rtc_command(&mut self, cmd: &str) -> Result<String> {
+        debug!("Executing RTC command: {}", cmd);
+        self.protocol.execute_system_command(&format!("rtc {}", cmd)).await
+    }
+
+    /// Execute system command
+    pub async fn execute_system_command(&mut self, cmd: &str) -> Result<String> {
+        debug!("Executing system command: {}", cmd);
+        self.protocol.execute_system_command(cmd).await
+    }
+
+    /// Execute power command
+    pub async fn execute_power_command(&mut self, rail: &str, state: &str) -> Result<String> {
+        debug!("Executing power command: {} {}", rail, state);
+        self.protocol.execute_power_command(rail, state).await
+    }
+
+    /// Execute communication command
+    pub async fn execute_comm_command(&mut self, signal: &str, state: &str) -> Result<String> {
+        debug!("Executing comm command: {} {}", signal, state);
+        self.protocol.execute_system_command(&format!("comm {} {}", signal, state)).await
+    }
+
+    /// Configure GPIO pin
+    pub async fn gpio_config(&mut self, port: &str, pin: u8, mode: &str) -> Result<String> {
+        info!("Configuring GPIO {}{} to {}", port, pin, mode);
         self.protocol
-            .execute_power_command("rtc_config", "status")
+            .execute_system_command(&format!("gpio config {} {} {}", port, pin, mode))
             .await
     }
 

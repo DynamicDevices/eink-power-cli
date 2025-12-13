@@ -1,6 +1,6 @@
 [package]
 name = "eink-power-cli"
-version = "2.5.0"
+version = "2.6.0"
 edition = "2021"
 license = "Commercial"
 description = "Command-line interface for E-ink power controller communication (PMU firmware v2.5.0+)"
