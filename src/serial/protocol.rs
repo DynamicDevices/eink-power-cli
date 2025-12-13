@@ -191,6 +191,24 @@ impl Protocol {
         let response = self.connection.send_command(&full_command).await?;
         self.parse_response(&response)
     }
+
+    /// Execute a communication control command
+    pub async fn execute_comm_command(&mut self, signal: &str, state: &str) -> Result<String> {
+        let command = format!("comm {} {}", signal, state);
+        debug!("Executing comm command: {}", command);
+
+        let response = self.connection.send_command(&command).await?;
+        self.parse_response(&response)
+    }
+
+    /// Execute an RTC command
+    pub async fn execute_rtc_command(&mut self, command: &str) -> Result<String> {
+        let full_command = format!("rtc {}", command);
+        debug!("Executing RTC command: {}", full_command);
+
+        let response = self.connection.send_command(&full_command).await?;
+        self.parse_response(&response)
+    }
 }
 
 /// Battery monitoring data structure

@@ -247,6 +247,20 @@ async fn execute_command(
                         println!("{}", response);
                     }
                 }
+                Ltc2959Commands::SetCharge { charge } => {
+                    let response = controller.control_ltc2959(&format!("set_charge {}", charge)).await?;
+                    if !cli.quiet {
+                        println!("🔋 LTC2959 Set Charge:");
+                        println!("{}", response);
+                    }
+                }
+                Ltc2959Commands::ChargeComplete => {
+                    let response = controller.control_ltc2959("charge_complete").await?;
+                    if !cli.quiet {
+                        println!("🔋 LTC2959 Charge Complete:");
+                        println!("{}", response);
+                    }
+                }
                 Ltc2959Commands::CcGpio { state } => {
                     let cmd = match state {
                         cli::PowerState::On => "cc_gpio on",
@@ -266,46 +280,24 @@ async fn execute_command(
                         println!("{}", response);
                     }
                 }
-                Ltc2959Commands::SetCharge { charge_mah } => {
-                    let response = controller
-                        .control_ltc2959(&format!("set_charge {}", charge_mah))
-                        .await?;
-                    if !cli.quiet {
-                        println!("🔋 LTC2959 Set Charge:");
-                        println!("{}", response);
-                    }
-                }
-                Ltc2959Commands::ChargeComplete => {
-                    let response = controller.control_ltc2959("charge_complete").await?;
-                    if !cli.quiet {
-                        println!("✅ LTC2959 Charge Complete:");
-                        println!("{}", response);
-                    }
-                }
                 Ltc2959Commands::AdcMode { mode } => {
-                    let response = controller
-                        .control_ltc2959(&format!("adc_mode {}", mode))
-                        .await?;
+                    let response = controller.control_ltc2959(&format!("adc_mode {}", mode)).await?;
                     if !cli.quiet {
-                        println!("⚙️ LTC2959 ADC Mode:");
+                        println!("🔧 LTC2959 ADC Mode:");
                         println!("{}", response);
                     }
                 }
                 Ltc2959Commands::RegRead { address } => {
-                    let response = controller
-                        .control_ltc2959(&format!("reg_read {}", address))
-                        .await?;
+                    let response = controller.control_ltc2959(&format!("reg_read {}", address)).await?;
                     if !cli.quiet {
                         println!("📖 LTC2959 Register Read:");
                         println!("{}", response);
                     }
                 }
                 Ltc2959Commands::RegWrite { address, value } => {
-                    let response = controller
-                        .control_ltc2959(&format!("reg_write {} {}", address, value))
-                        .await?;
+                    let response = controller.control_ltc2959(&format!("reg_write {} {}", address, value)).await?;
                     if !cli.quiet {
-                        println!("✏️ LTC2959 Register Write:");
+                        println!("✍️ LTC2959 Register Write:");
                         println!("{}", response);
                     }
                 }
@@ -350,34 +342,6 @@ async fn execute_command(
                         println!("{}", response);
                     }
                 }
-                PowerCommands::All { state } => {
-                    let state_str = match state {
-                        PowerState::On => "on",
-                        PowerState::Off => "off",
-                        PowerState::Status => "status",
-                    };
-                    let response = controller.execute_power_command("all", state_str).await?;
-                    if !cli.quiet {
-                        println!("⚡ All Power Rails:");
-                        println!("{}", response);
-                    }
-                }
-                PowerCommands::Defaults {
-                    action,
-                    rail,
-                    rail_state,
-                } => {
-                    let cmd = match (action, rail, rail_state) {
-                        (Some(a), None, None) if a == "save" => "power defaults save".to_string(),
-                        (None, Some(r), Some(s)) => format!("power defaults {} {}", r, s),
-                        _ => "power defaults".to_string(),
-                    };
-                    let response = controller.execute_system_command(&cmd).await?;
-                    if !cli.quiet {
-                        println!("⚙️ Power Defaults:");
-                        println!("{}", response);
-                    }
-                }
                 PowerCommands::Stats => {
                     let stats = controller.get_power_stats().await?;
                     if !cli.quiet {
@@ -412,16 +376,16 @@ async fn execute_command(
                     }
                 }
                 GpioCommands::Config { port, pin, mode } => {
-                    let response = controller.gpio_config(&port, pin, &mode).await?;
+                    let response = controller.control_gpio_config(&port, pin, &mode).await?;
                     if !cli.quiet {
-                        println!("⚙️ GPIO {}{} configured to {}:", port, pin, mode);
+                        println!("📌 GPIO {}{} configured to {}:", port, pin, mode);
                         println!("{}", response);
                     }
                 }
             }
         }
         Commands::System(system_cmd) => {
-            use cli::{EraseTarget, SystemCommands};
+            use cli::{EraseCommands, SystemCommands};
             match system_cmd {
                 SystemCommands::Info => {
                     let response = controller.get_system_info_detailed().await?;
@@ -429,7 +393,7 @@ async fn execute_command(
                 }
                 SystemCommands::Reboot { cold } => {
                     let cmd = if cold { "system reset cold" } else { "system reset" };
-                    let response = controller.execute_system_command(cmd).await?;
+                    let response = controller.pm_command(cmd).await?;
                     output_response(cli, "system reboot", &response, "🔄", "System Reboot")?;
                 }
                 SystemCommands::Uptime => {
@@ -437,21 +401,20 @@ async fn execute_command(
                     output_response(cli, "system uptime", &response, "⏱️", "System Uptime")?;
                 }
                 SystemCommands::DfuMode { timeout } => {
-                    let cmd = if let Some(t) = timeout {
-                        format!("system dfu-mode {}", t)
-                    } else {
-                        "system dfu-mode".to_string()
-                    };
-                    let response = controller.execute_system_command(&cmd).await?;
+                    let response = controller.pm_command(&format!("system dfu-mode {}", timeout)).await?;
                     output_response(cli, "system dfu-mode", &response, "🔄", "DFU Mode")?;
                 }
-                SystemCommands::Erase { target } => {
-                    let cmd = match target {
-                        EraseTarget::App => "system erase app",
-                        EraseTarget::Defaults => "system erase defaults",
-                    };
-                    let response = controller.execute_system_command(cmd).await?;
-                    output_response(cli, "system erase", &response, "🗑️", "Erase Operation")?;
+                SystemCommands::Erase(erase_cmd) => {
+                    match erase_cmd {
+                        EraseCommands::App => {
+                            let response = controller.pm_command("system erase app").await?;
+                            output_response(cli, "system erase app", &response, "🗑️", "Erase Application")?;
+                        }
+                        EraseCommands::Defaults => {
+                            let response = controller.pm_command("system erase defaults").await?;
+                            output_response(cli, "system erase defaults", &response, "🗑️", "Erase Defaults")?;
+                        }
+                    }
                 }
             }
         }
@@ -489,7 +452,7 @@ async fn execute_command(
             }
         }
         Commands::Pm(pm_cmd) => {
-            use cli::{Ltc2959AdcAction, NfcAdcAction, PowerManagementCommands};
+            use cli::{DefaultsCommands, DeviceAction, PowerManagementCommands, PowerState};
             match pm_cmd {
                 PowerManagementCommands::Stats => {
                     let response = controller.pm_stats().await?;
@@ -509,34 +472,35 @@ async fn execute_command(
                     vlls2,
                     vlls3,
                 } => {
-                    let mut cmd = "pm sleep".to_string();
+                    let mut cmd_parts = vec!["sleep".to_string()];
                     if let Some(t) = time {
-                        cmd.push_str(&format!(" {}", t));
+                        cmd_parts.push(t);
                     }
                     if pmic {
-                        cmd.push_str(" --pmic");
+                        cmd_parts.push("--pmic".to_string());
                     }
                     if wifi {
-                        cmd.push_str(" --wifi");
+                        cmd_parts.push("--wifi".to_string());
                     }
                     if disp {
-                        cmd.push_str(" --disp");
+                        cmd_parts.push("--disp".to_string());
                     }
                     if alloff {
-                        cmd.push_str(" --alloff");
+                        cmd_parts.push("--alloff".to_string());
                     }
                     if vlls0 {
-                        cmd.push_str(" --vlls0");
+                        cmd_parts.push("--vlls0".to_string());
                     }
                     if vlls1 {
-                        cmd.push_str(" --vlls1");
+                        cmd_parts.push("--vlls1".to_string());
                     }
                     if vlls2 {
-                        cmd.push_str(" --vlls2");
+                        cmd_parts.push("--vlls2".to_string());
                     }
                     if vlls3 {
-                        cmd.push_str(" --vlls3");
+                        cmd_parts.push("--vlls3".to_string());
                     }
+                    let cmd = cmd_parts.join(" ");
                     let response = controller.pm_command(&cmd).await?;
                     if !cli.quiet {
                         println!("😴 Entering Low Power Mode:");
@@ -544,16 +508,16 @@ async fn execute_command(
                     }
                 }
                 PowerManagementCommands::Wake => {
-                    let response = controller.pm_command("pm wake").await?;
+                    let response = controller.pm_command("wake").await?;
                     if !cli.quiet {
-                        println!("🔔 Last Wake Source:");
+                        println!("⏰ Last Wake Source:");
                         println!("{}", response);
                     }
                 }
                 PowerManagementCommands::Measure => {
-                    let response = controller.pm_command("pm measure").await?;
+                    let response = controller.pm_command("measure").await?;
                     if !cli.quiet {
-                        println!("📊 Battery Measurement:");
+                        println!("🔋 Battery Measurement:");
                         println!("{}", response);
                     }
                 }
@@ -574,6 +538,130 @@ async fn execute_command(
                         println!("{}", response);
                     }
                 }
+                PowerManagementCommands::All { state } => {
+                    let state_str = match state {
+                        PowerState::On => "on",
+                        PowerState::Off => "off",
+                        PowerState::Status => "status",
+                    };
+                    let response = controller.pm_command(&format!("all {}", state_str)).await?;
+                    if !cli.quiet {
+                        println!("⚡ All Power Rails:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::Pmic { state } => {
+                    let state_str = match state {
+                        PowerState::On => "on",
+                        PowerState::Off => "off",
+                        PowerState::Status => "status",
+                    };
+                    let response = controller.pm_command(&format!("pmic {}", state_str)).await?;
+                    if !cli.quiet {
+                        println!("⚡ PMIC Control:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::Wifi { state } => {
+                    let state_str = match state {
+                        PowerState::On => "on",
+                        PowerState::Off => "off",
+                        PowerState::Status => "status",
+                    };
+                    let response = controller.pm_command(&format!("wifi {}", state_str)).await?;
+                    if !cli.quiet {
+                        println!("📶 WiFi Control:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::Disp { state } => {
+                    let state_str = match state {
+                        PowerState::On => "on",
+                        PowerState::Off => "off",
+                        PowerState::Status => "status",
+                    };
+                    let response = controller.pm_command(&format!("disp {}", state_str)).await?;
+                    if !cli.quiet {
+                        println!("🖥️ Display Control:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::Defaults(defaults_cmd) => {
+                    match defaults_cmd {
+                        DefaultsCommands::Show => {
+                            let response = controller.pm_command("defaults").await?;
+                            if !cli.quiet {
+                                println!("⚙️ Power Rail Defaults:");
+                                println!("{}", response);
+                            }
+                        }
+                        DefaultsCommands::Save => {
+                            let response = controller.pm_command("defaults save").await?;
+                            if !cli.quiet {
+                                println!("💾 Saving Power Rail Defaults:");
+                                println!("{}", response);
+                            }
+                        }
+                        DefaultsCommands::Pmic { state } => {
+                            let state_str = match state {
+                                PowerState::On => "on",
+                                PowerState::Off => "off",
+                                PowerState::Status => "status",
+                            };
+                            let response = controller.pm_command(&format!("defaults pmic {}", state_str)).await?;
+                            if !cli.quiet {
+                                println!("⚙️ PMIC Default:");
+                                println!("{}", response);
+                            }
+                        }
+                        DefaultsCommands::Wifi { state } => {
+                            let state_str = match state {
+                                PowerState::On => "on",
+                                PowerState::Off => "off",
+                                PowerState::Status => "status",
+                            };
+                            let response = controller.pm_command(&format!("defaults wifi {}", state_str)).await?;
+                            if !cli.quiet {
+                                println!("⚙️ WiFi Default:");
+                                println!("{}", response);
+                            }
+                        }
+                        DefaultsCommands::Disp { state } => {
+                            let state_str = match state {
+                                PowerState::On => "on",
+                                PowerState::Off => "off",
+                                PowerState::Status => "status",
+                            };
+                            let response = controller.pm_command(&format!("defaults disp {}", state_str)).await?;
+                            if !cli.quiet {
+                                println!("⚙️ Display Default:");
+                                println!("{}", response);
+                            }
+                        }
+                    }
+                }
+                PowerManagementCommands::Ltc2959 { action } => {
+                    let action_str = match action {
+                        DeviceAction::Wake => "wake",
+                        DeviceAction::Sleep => "sleep",
+                    };
+                    let response = controller.pm_command(&format!("ltc2959 {}", action_str)).await?;
+                    if !cli.quiet {
+                        println!("🔋 LTC2959 Control:");
+                        println!("{}", response);
+                    }
+                }
+                PowerManagementCommands::Nfc { action } => {
+                    let action_str = match action {
+                        DeviceAction::Wake => "wake",
+                        DeviceAction::Sleep => "sleep",
+                    };
+                    let response = controller.pm_command(&format!("nfc {}", action_str)).await?;
+                    if !cli.quiet {
+                        println!("📡 NFC Control:");
+                        println!("{}", response);
+                    }
+                }
                 PowerManagementCommands::BatteryCheck => {
                     let response = controller.pm_command("battery_check").await?;
                     if !cli.quiet {
@@ -583,35 +671,13 @@ async fn execute_command(
                 }
                 PowerManagementCommands::Imx93 { state } => {
                     let cmd = match state {
-                        cli::PowerState::On => "imx93 on",
-                        cli::PowerState::Off => "imx93 off",
-                        cli::PowerState::Status => "imx93 status",
+                        PowerState::On => "imx93 on",
+                        PowerState::Off => "imx93 off",
+                        PowerState::Status => "imx93 status",
                     };
                     let response = controller.pm_command(cmd).await?;
                     if !cli.quiet {
                         println!("🖥️ i.MX93 Power Control:");
-                        println!("{}", response);
-                    }
-                }
-                PowerManagementCommands::Ltc2959 { action } => {
-                    let cmd = match action {
-                        Ltc2959AdcAction::Wake => "pm ltc2959 wake",
-                        Ltc2959AdcAction::Sleep => "pm ltc2959 sleep",
-                    };
-                    let response = controller.pm_command(cmd).await?;
-                    if !cli.quiet {
-                        println!("🔋 LTC2959 ADC Control:");
-                        println!("{}", response);
-                    }
-                }
-                PowerManagementCommands::Nfc { action } => {
-                    let cmd = match action {
-                        NfcAdcAction::Wake => "pm nfc wake",
-                        NfcAdcAction::Sleep => "pm nfc sleep",
-                    };
-                    let response = controller.pm_command(cmd).await?;
-                    if !cli.quiet {
-                        println!("📡 NFC Control:");
                         println!("{}", response);
                     }
                 }
@@ -620,31 +686,17 @@ async fn execute_command(
         Commands::Nfc(nfc_cmd) => {
             use cli::NfcCommands;
             match nfc_cmd {
-                NfcCommands::Status => {
-                    let response = controller.nfc_command("status").await?;
-                    if !cli.quiet {
-                        println!("📡 NFC Status:");
-                        println!("{}", response);
-                    }
-                }
-                NfcCommands::Info => {
-                    let response = controller.nfc_command("info").await?;
-                    if !cli.quiet {
-                        println!("ℹ️ NFC Device Information:");
-                        println!("{}", response);
-                    }
-                }
-                NfcCommands::FieldDetect => {
-                    let response = controller.nfc_command("field_detect").await?;
-                    if !cli.quiet {
-                        println!("📡 NFC Field Detection:");
-                        println!("{}", response);
-                    }
-                }
                 NfcCommands::Scan => {
                     let response = controller.nfc_command("scan").await?;
                     if !cli.quiet {
                         println!("🔍 NFC I2C Scan:");
+                        println!("{}", response);
+                    }
+                }
+                NfcCommands::Status => {
+                    let response = controller.nfc_command("status").await?;
+                    if !cli.quiet {
+                        println!("📡 NFC Status:");
                         println!("{}", response);
                     }
                 }
@@ -658,21 +710,21 @@ async fn execute_command(
                 NfcCommands::Debug => {
                     let response = controller.nfc_command("debug").await?;
                     if !cli.quiet {
-                        println!("🐛 NFC Debug Information:");
+                        println!("🐛 NFC Debug:");
                         println!("{}", response);
                     }
                 }
                 NfcCommands::Rfdbg => {
                     let response = controller.nfc_command("rfdbg").await?;
                     if !cli.quiet {
-                        println!("📻 NFC RF Diagnostic:");
+                        println!("📡 NFC RF Diagnostic:");
                         println!("{}", response);
                     }
                 }
                 NfcCommands::Ed => {
                     let response = controller.nfc_command("ed").await?;
                     if !cli.quiet {
-                        println!("📡 NFC Field Detection Status:");
+                        println!("📡 NFC Field Detection:");
                         println!("{}", response);
                     }
                 }
@@ -693,7 +745,21 @@ async fn execute_command(
                 NfcCommands::Reset => {
                     let response = controller.nfc_command("reset").await?;
                     if !cli.quiet {
-                        println!("🔄 NFC System Reset:");
+                        println!("🔄 NFC Reset:");
+                        println!("{}", response);
+                    }
+                }
+                NfcCommands::Info => {
+                    let response = controller.nfc_command("info").await?;
+                    if !cli.quiet {
+                        println!("ℹ️ NFC Device Information:");
+                        println!("{}", response);
+                    }
+                }
+                NfcCommands::FieldDetect => {
+                    let response = controller.nfc_command("field_detect").await?;
+                    if !cli.quiet {
+                        println!("📡 NFC Field Detection:");
                         println!("{}", response);
                     }
                 }
@@ -707,7 +773,7 @@ async fn execute_command(
                     output_response(cli, "rtc status", &response, "🕐", "RTC Status")?;
                 }
                 RtcCommands::Get => {
-                    let response = controller.execute_rtc_command("get").await?;
+                    let response = controller.rtc_get().await?;
                     output_response(cli, "rtc get", &response, "🕐", "RTC Counter")?;
                 }
                 RtcCommands::Config { action } => {
@@ -734,7 +800,7 @@ async fn execute_command(
                         PowerState::Off => "off",
                         PowerState::Status => "status",
                     };
-                    let response = controller.execute_comm_command("bt_wake", state_str).await?;
+                    let response = controller.control_comm("bt_wake", state_str).await?;
                     if !cli.quiet {
                         println!("📡 BT_WAKE_HOST:");
                         println!("{}", response);
@@ -746,7 +812,7 @@ async fn execute_command(
                         PowerState::Off => "off",
                         PowerState::Status => "status",
                     };
-                    let response = controller.execute_comm_command("wl_wake", state_str).await?;
+                    let response = controller.control_comm("wl_wake", state_str).await?;
                     if !cli.quiet {
                         println!("📡 WL_WAKE_HOST:");
                         println!("{}", response);

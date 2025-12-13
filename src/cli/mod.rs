@@ -144,7 +144,7 @@ pub enum SystemCommands {
     Info,
     /// Reboot the controller
     Reboot {
-        /// Cold reset (full power cycle)
+        /// Cold reset (default: warm reset)
         #[arg(long)]
         cold: bool,
     },
@@ -152,15 +152,13 @@ pub enum SystemCommands {
     Uptime,
     /// Request bootloader DFU mode
     DfuMode {
-        /// Timeout in seconds (optional)
-        timeout: Option<u32>,
+        /// Timeout in seconds (0-255, default: 20, 0=infinite)
+        #[arg(default_value = "20")]
+        timeout: u8,
     },
     /// Erase operations
-    Erase {
-        /// Erase target: app (both slots), defaults (configuration)
-        #[arg(value_enum)]
-        target: EraseTarget,
-    },
+    #[command(subcommand)]
+    Erase(EraseCommands),
 }
 
 /// Power control commands
@@ -183,21 +181,6 @@ pub enum PowerCommands {
         /// Power state
         #[arg(value_enum)]
         state: PowerState,
-    },
-    /// Control all power rails
-    All {
-        /// Power state
-        #[arg(value_enum)]
-        state: PowerState,
-    },
-    /// Power rail defaults for bootloader
-    Defaults {
-        /// Action: save, or set <rail> <on|off>
-        action: Option<String>,
-        /// Rail name (if setting)
-        rail: Option<String>,
-        /// Rail state (if setting)
-        rail_state: Option<String>,
     },
     /// Show power statistics
     Stats,
@@ -223,27 +206,27 @@ pub enum BatteryCommands {
 pub enum GpioCommands {
     /// Read GPIO state
     Get {
-        /// GPIO port (e.g., a, b, c, d, e)
+        /// GPIO port (e.g., gpioa, gpiob)
         port: String,
         /// GPIO pin number
         pin: u8,
     },
     /// Set GPIO state
     Set {
-        /// GPIO port (e.g., a, b, c, d, e)
+        /// GPIO port (e.g., gpioa, gpiob)
         port: String,
         /// GPIO pin number
         pin: u8,
         /// Value to set (0 or 1)
         value: u8,
     },
-    /// Configure GPIO mode
+    /// Configure GPIO pin
     Config {
-        /// GPIO port (e.g., a, b, c, d, e)
+        /// GPIO port (e.g., gpioa, gpiob)
         port: String,
         /// GPIO pin number
         pin: u8,
-        /// Mode: input, output, input_pullup, input_pulldown
+        /// GPIO mode (input, output, etc.)
         mode: String,
     },
 }
@@ -251,28 +234,28 @@ pub enum GpioCommands {
 /// NFC interface commands
 #[derive(Subcommand, Debug, Clone)]
 pub enum NfcCommands {
+    /// Scan I2C bus for NTA5332 NFC chip
+    Scan,
     /// Get NFC status
     Status,
+    /// Initialize NTA5332 chip
+    Init,
+    /// Comprehensive NFC debug information
+    Debug,
+    /// RF interface diagnostic
+    Rfdbg,
+    /// Show NFC field detection status
+    Ed,
+    /// Enable NFC RF interface
+    Enable,
+    /// Disable NFC RF interface
+    Disable,
+    /// System reset NTA5332
+    Reset,
     /// Get NFC device information
     Info,
     /// Check field detection
     FieldDetect,
-    /// Scan I2C bus for NTA5332 NFC chip
-    Scan,
-    /// Initialize NTA5332 chip (use if chip not responding)
-    Init,
-    /// Comprehensive NFC debug information
-    Debug,
-    /// RF interface diagnostic (CRITICAL for RF enable issues)
-    Rfdbg,
-    /// Show NFC field detection status
-    Ed,
-    /// Enable NFC RF interface for field detection
-    Enable,
-    /// Disable NFC RF interface
-    Disable,
-    /// System reset NTA5332 (activates SRAM after CONFIG changes)
-    Reset,
 }
 
 /// Power management commands
@@ -282,36 +265,37 @@ pub enum PowerManagementCommands {
     Stats,
     /// Enter low power mode
     Sleep {
-        /// Sleep time (supports units: d/h/m/s, e.g., "1d2h30m" or "10s")
+        /// Sleep duration (e.g., 30s, 5m, 2h, 1d, or combinations like 1d12h30m)
+        #[arg(short, long)]
         time: Option<String>,
-        /// Turn off PMIC during sleep
+        /// Turn off PMIC before sleep
         #[arg(long)]
         pmic: bool,
-        /// Turn off WiFi during sleep
+        /// Turn off WiFi before sleep
         #[arg(long)]
         wifi: bool,
-        /// Turn off display during sleep
+        /// Turn off display before sleep
         #[arg(long)]
         disp: bool,
-        /// Turn off all power rails during sleep
+        /// Turn off all peripherals before sleep
         #[arg(long)]
         alloff: bool,
-        /// Use VLLS0 mode
+        /// VLLS0 mode (~150 nA, external wake only)
         #[arg(long)]
         vlls0: bool,
-        /// Use VLLS1 mode
+        /// VLLS1 mode (~200 nA, internal RTC wake enabled)
         #[arg(long)]
         vlls1: bool,
-        /// Use VLLS2 mode
+        /// VLLS2 mode (~350 nA, more RAM retention)
         #[arg(long)]
         vlls2: bool,
-        /// Use VLLS3 mode
+        /// VLLS3 mode (~412 nA, full RAM, most wake sources)
         #[arg(long)]
         vlls3: bool,
     },
-    /// Show last LLS wake source (debug for --alloff)
+    /// Show last LLS wake source
     Wake,
-    /// Battery voltage and current measurement
+    /// Battery voltage and current measurement (one-time)
     Measure,
     /// Start/stop monitoring
     Monitor {
@@ -321,6 +305,45 @@ pub enum PowerManagementCommands {
         /// Monitoring interval in seconds
         interval: Option<u64>,
     },
+    /// Control all power rails
+    All {
+        /// Power state
+        #[arg(value_enum)]
+        state: PowerState,
+    },
+    /// Control PMIC power
+    Pmic {
+        /// Power state
+        #[arg(value_enum)]
+        state: PowerState,
+    },
+    /// Control WiFi power
+    Wifi {
+        /// Power state
+        #[arg(value_enum)]
+        state: PowerState,
+    },
+    /// Control display power
+    Disp {
+        /// Power state
+        #[arg(value_enum)]
+        state: PowerState,
+    },
+    /// Power rail defaults for bootloader
+    #[command(subcommand)]
+    Defaults(DefaultsCommands),
+    /// LTC2959 ADC control
+    Ltc2959 {
+        /// Action (wake or sleep)
+        #[arg(value_enum)]
+        action: DeviceAction,
+    },
+    /// NTA5332 NFC control
+    Nfc {
+        /// Action (wake or sleep)
+        #[arg(value_enum)]
+        action: DeviceAction,
+    },
     /// Perform battery health check
     BatteryCheck,
     /// Control i.MX93 power
@@ -328,18 +351,6 @@ pub enum PowerManagementCommands {
         /// Power state
         #[arg(value_enum)]
         state: PowerState,
-    },
-    /// LTC2959 ADC control
-    Ltc2959 {
-        /// Action: wake or sleep
-        #[arg(value_enum)]
-        action: Ltc2959AdcAction,
-    },
-    /// NTA5332 NFC control
-    Nfc {
-        /// Action: wake or sleep
-        #[arg(value_enum)]
-        action: NfcAdcAction,
     },
 }
 
@@ -367,6 +378,13 @@ pub enum Ltc2959Commands {
     Disable,
     /// Scan I2C bus for LTC2959 device
     Scan,
+    /// Set accumulated charge (mAh)
+    SetCharge {
+        /// Charge value in mAh
+        charge: u32,
+    },
+    /// Trigger charge complete
+    ChargeComplete,
     /// Control CC_GPIO pin
     CcGpio {
         /// GPIO state
@@ -375,28 +393,21 @@ pub enum Ltc2959Commands {
     },
     /// Reset for fresh battery installation
     ProductionReset,
-    /// Set accumulated charge (mAh)
-    SetCharge {
-        /// Charge value in mAh
-        charge_mah: u32,
-    },
-    /// Trigger charge complete
-    ChargeComplete,
     /// Set ADC mode (0-6)
     AdcMode {
-        /// ADC mode: 0=Sleep, 1=Smart Sleep, 2=Continuous V, 3=Continuous I, 4=Continuous V+I, 5=Single Shot, 6=Continuous V+I+T
+        /// ADC mode value (0-6)
         mode: u8,
     },
-    /// Read register (hex address)
+    /// Read register (hex)
     RegRead {
-        /// Register address in hex (e.g., 0x00)
+        /// Register address in hex
         address: String,
     },
-    /// Write register (hex address and value)
+    /// Write register (hex)
     RegWrite {
-        /// Register address in hex (e.g., 0x00)
+        /// Register address in hex
         address: String,
-        /// Register value in hex (e.g., 0xFF)
+        /// Value to write in hex
         value: String,
     },
 }
@@ -470,45 +481,63 @@ pub enum ExternalRtcAction {
     Auto,
 }
 
-/// Erase targets
-#[derive(ValueEnum, Clone, Debug)]
-pub enum EraseTarget {
+/// Erase commands
+#[derive(Subcommand, Debug, Clone)]
+pub enum EraseCommands {
     /// Erase both application partitions (slot0 and slot1)
     App,
     /// Erase configuration defaults from storage
     Defaults,
 }
 
-/// LTC2959 ADC actions
-#[derive(ValueEnum, Clone, Debug)]
-pub enum Ltc2959AdcAction {
-    /// Wake LTC2959 ADC
-    Wake,
-    /// Sleep LTC2959 ADC
-    Sleep,
+/// Power rail defaults commands
+#[derive(Subcommand, Debug, Clone)]
+pub enum DefaultsCommands {
+    /// Show current defaults stored in flash
+    Show,
+    /// Save current power rail states as defaults
+    Save,
+    /// Set PMIC_EN default state
+    Pmic {
+        /// Power state
+        #[arg(value_enum)]
+        state: PowerState,
+    },
+    /// Set WiFi_EN default state
+    Wifi {
+        /// Power state
+        #[arg(value_enum)]
+        state: PowerState,
+    },
+    /// Set DISP_EN default state
+    Disp {
+        /// Power state
+        #[arg(value_enum)]
+        state: PowerState,
+    },
 }
 
-/// NFC ADC actions
+/// Device actions (wake/sleep)
 #[derive(ValueEnum, Clone, Debug)]
-pub enum NfcAdcAction {
-    /// Wake NFC
+pub enum DeviceAction {
+    /// Wake device
     Wake,
-    /// Sleep NFC
+    /// Sleep device
     Sleep,
 }
 
 /// Communication control commands
 #[derive(Subcommand, Debug, Clone)]
 pub enum CommCommands {
-    /// Control BT_WAKE_HOST signal
+    /// Control BT_WAKE_HOST signal (PTC1)
     BtWake {
-        /// Signal state
+        /// Power state
         #[arg(value_enum)]
         state: PowerState,
     },
-    /// Control WL_WAKE_HOST signal
+    /// Control WL_WAKE_HOST signal (PTC3)
     WlWake {
-        /// Signal state
+        /// Power state
         #[arg(value_enum)]
         state: PowerState,
     },
