@@ -29,8 +29,9 @@ impl Protocol {
     }
 
     /// Execute a power control command
+    /// Note: PMU firmware uses 'pm' command, not 'power' command
     pub async fn execute_power_command(&mut self, rail: &str, state: &str) -> Result<String> {
-        let command = format!("power {} {}", rail, state);
+        let command = format!("pm {} {}", rail, state);
         debug!("Executing power command: {}", command);
 
         let response = self.connection.send_command(&command).await?;
